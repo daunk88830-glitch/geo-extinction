@@ -1,60 +1,46 @@
-import './style.css'
-import javascriptLogo from './assets/javascript.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import { setupCounter } from './counter.js'
+import './styles/base.css';
+import './styles/home.css';
+import './styles/timeline.css';
 
-document.querySelector('#app').innerHTML = `
-<section id="center">
-  <div class="hero">
-    <img src="${heroImg}" class="base" width="170" height="179">
-    <img src="${javascriptLogo}" class="framework" alt="JavaScript logo"/>
-    <img src="${viteLogo}" class="vite" alt="Vite logo" />
-  </div>
-  <div>
-    <h1>Get started</h1>
-    <p>Edit <code>src/main.js</code> and save to test <code>HMR</code></p>
-  </div>
-  <button id="counter" type="button" class="counter"></button>
-</section>
+import * as store from './store.js';
+import { register, setGuard, start } from './router.js';
 
-<div class="ticks"></div>
+/* 앱 시작점.
+ * 1) 저장된 로그인 정보를 복구하고
+ * 2) 경로별 화면을 등록한 뒤
+ * 3) 라우터를 켭니다.
+ */
 
-<section id="next-steps">
-  <div id="docs">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#documentation-icon"></use></svg>
-    <h2>Documentation</h2>
-    <p>Your questions, answered</p>
-    <ul>
-      <li>
-        <a href="https://vite.dev/" target="_blank">
-          <img class="logo" src="${viteLogo}" alt="" />
-          Explore Vite
-        </a>
-      </li>
-      <li>
-        <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-          <img class="button-icon" src="${javascriptLogo}" alt="">
-          Learn more
-        </a>
-      </li>
-    </ul>
-  </div>
-  <div id="social">
-    <svg class="icon" role="presentation" aria-hidden="true"><use href="/icons.svg#social-icon"></use></svg>
-    <h2>Connect with us</h2>
-    <p>Join the Vite community</p>
-    <ul>
-      <li><a href="https://github.com/vitejs/vite" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#github-icon"></use></svg>GitHub</a></li>
-      <li><a href="https://chat.vite.dev/" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>Discord</a></li>
-      <li><a href="https://x.com/vite_js" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#x-icon"></use></svg>X.com</a></li>
-      <li><a href="https://bsky.app/profile/vite.dev" target="_blank"><svg class="button-icon" role="presentation" aria-hidden="true"><use href="/icons.svg#bluesky-icon"></use></svg>Bluesky</a></li>
-    </ul>
-  </div>
-</section>
+store.loadUserFromStorage();
 
-<div class="ticks"></div>
-<section id="spacer"></section>
-`
+/* 화면은 필요할 때 내려받습니다(동적 import).
+   첫 화면이 빨리 뜨고, 교실 와이파이에서 초기 로딩이 가벼워집니다. */
+register('#/home', () => import('./views/home.js'));
+register('#/timeline', () => import('./views/timeline.js'));
 
-setupCounter(document.querySelector('#counter'))
+/* 로그인 전에는 어떤 화면으로 들어와도 홈으로 보냅니다. */
+setGuard((path) => {
+  if (!store.isSignedIn() && path !== '#/home') return '#/home';
+  if (store.isSignedIn() && path === '#/home') return '#/timeline';
+  return null;
+});
+
+/* 상단 바는 로그인 후에만 보입니다. */
+const topbar = document.getElementById('topbar');
+const who = document.getElementById('topbar-who');
+
+function syncTopbar() {
+  const signed = store.isSignedIn();
+  topbar.hidden = !signed;
+  document.body.classList.toggle('has-topbar', signed);
+  if (signed) {
+    const u = store.get('user');
+    who.textContent = `${u.groupId}모둠 · ${u.name}`;
+  }
+}
+
+store.subscribe('user', syncTopbar);
+store.subscribe('route', syncTopbar);
+syncTopbar();
+
+start(document.getElementById('app'));

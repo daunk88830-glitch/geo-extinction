@@ -1,0 +1,79 @@
+.home {
+  padding: clamp(32px, 9vh, 80px) 20px 56px;
+}
+
+.home__brand { margin-bottom: 40px; }
+
+.home__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.home__title {
+  font-size: clamp(2.1rem, 11vw, 3rem);
+  letter-spacing: -0.035em;
+  line-height: 1.12;
+}
+
+.home__sub {
+  margin-top: 14px;
+  color: var(--muted);
+  max-width: 30ch;
+}
+
+.home__groups {
+  border: 0;
+  margin: 0 0 18px;
+  padding: 0;
+}
+
+.home__grouprow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.chip { position: relative; display: block; }
+
+.chip input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.chip span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+.chip input:checked + span {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+
+.chip input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.home__submit { width: 100%; }
+
+.home__note {
+  margin-top: 24px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
