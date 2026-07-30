@@ -1,13 +1,12 @@
 import * as store from '../store.js';
 import { go } from '../router.js';
+import { joinClass, authErrorMessage } from '../services/auth.js';
+import { configured } from '../firebase.js';
 
-/* 홈 — 학번·이름·모둠번호를 받습니다.
+/* 홈 — 학번·이름·모둠번호를 받고 익명 로그인까지 마칩니다.
  *
- * [Day 1 범위] 입력값을 store + localStorage 에 저장하고 타임라인으로 보냅니다.
- * [다음 단계]  Firebase 익명 로그인을 붙여 uid 를 발급받고,
- *              sessions/{sid}/students/{uid} 문서를 만듭니다.
- *              그 uid 가 marks·claims 문서 ID 의 앞부분이 되어
- *              "남의 데이터는 건드릴 수 없다"는 보안 규칙의 근거가 됩니다.
+ * 여기서 발급받은 uid 가 marks·claims·quizAnswers 문서 이름의 앞부분이 되고,
+ * 보안 규칙이 그 uid 를 검사해 "남의 데이터는 건드릴 수 없다"를 보장합니다.
  */
 
 const GROUPS = [1, 2, 3, 4, 5, 6];
@@ -56,13 +55,21 @@ export default function home(outlet) {
       <p class="home__note">
         입력한 학번과 이름은 이 수업의 활동 기록에만 쓰입니다.
       </p>
+
+      ${
+        configured
+          ? ''
+          : `<p class="home__warn">Firebase 설정 전입니다. 입력한 내용은 이 브라우저에만
+             저장되고 서버로 올라가지 않습니다. (.env.local 을 채우면 해결됩니다)</p>`
+      }
     </div>
   `;
 
   const form = outlet.querySelector('#join');
   const err = outlet.querySelector('#f-err');
+  const submit = outlet.querySelector('.home__submit');
 
-  function onSubmit(e) {
+  async function onSubmit(e) {
     e.preventDefault();
 
     const studentId = outlet.querySelector('#f-sid').value.trim();
@@ -72,14 +79,28 @@ export default function home(outlet) {
     if (!studentId) return fail('학번을 입력해 주세요.');
     if (!/^\d{4,6}$/.test(studentId)) return fail('학번은 숫자 4~6자리로 입력해 주세요.');
     if (!name) return fail('이름을 입력해 주세요.');
+    if (name.length > 20) return fail('이름이 너무 깁니다.');
     if (!picked) return fail('모둠을 선택해 주세요.');
 
     err.textContent = '';
-    store.patch('user', { studentId, name, groupId: Number(picked.value) });
-    store.saveUserToStorage();
+    setBusy(true);
 
-    // TODO(Day 1 후반): 여기서 Firebase 익명 로그인 → uid 저장 → students 문서 생성
-    go('#/timeline');
+    try {
+      // 익명 로그인 + sessions/{세션}/students/{uid} 등록
+      await joinClass({ studentId, name, groupId: Number(picked.value) });
+      go('#/timeline');
+    } catch (e2) {
+      console.error('[home] 로그인 실패:', e2);
+      fail(authErrorMessage(e2));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function setBusy(on) {
+    store.patch('ui', { busy: on });
+    submit.disabled = on;
+    submit.textContent = on ? '연결하는 중…' : '시작하기';
   }
 
   function fail(msg) {

@@ -44,3 +44,12 @@ store.subscribe('route', syncTopbar);
 syncTopbar();
 
 start(document.getElementById('app'));
+
+/* 화면을 먼저 띄우고, uid 복구는 뒤에서 조용히 처리합니다.
+   Firebase SDK(gzip 약 150KB)를 첫 화면과 함께 내려받지 않으려고
+   동적 import 로 미룹니다. 30명이 동시에 접속하는 교실에서
+   첫 화면이 뜨는 속도가 눈에 띄게 달라집니다.
+   Firebase 가 느리거나 막혀 있어도 타임라인은 그대로 보입니다. */
+import('./services/auth.js')
+  .then((m) => m.restoreAuth())
+  .catch((e) => console.warn('[main] 인증 모듈을 불러오지 못했습니다:', e));

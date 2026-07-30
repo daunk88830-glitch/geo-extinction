@@ -77,3 +77,14 @@
   font-size: 0.8rem;
   color: var(--muted);
 }
+
+.home__warn {
+  margin-top: 16px;
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--r);
+}

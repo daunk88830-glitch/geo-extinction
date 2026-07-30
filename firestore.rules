@@ -1,0 +1,105 @@
+rules_version = '2';
+
+/* Firestore 보안 규칙.
+ *
+ * Firebase 콘솔 → Firestore Database → 규칙 탭에 이 파일 내용을 통째로
+ * 붙여넣고 [게시] 를 누르세요.
+ *
+ * 핵심 원칙
+ *  1. 로그인(익명이라도)하지 않으면 아무것도 못 한다.
+ *  2. 문서 이름 앞부분이 내 uid 인 문서만 쓸 수 있다 → 남의 데이터 조작 불가.
+ *  3. 칸 점유(cellLocks)는 create 만 허용 → 먼저 만든 모둠이 이긴다.
+ *  4. 판정(claims)은 그 칸을 점유한 모둠만 쓸 수 있다.
+ *
+ * Day 1 에서 실제로 쓰이는 것은 students 뿐입니다.
+ * 나머지는 Day 2~3 에서 쓰지만 규칙은 지금 한 번에 올려둡니다.
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+
+    // "uid_무엇" 형태의 문서 이름에서 앞부분이 내 uid 인지
+    function ownsDocId(id) { return id.split('_')[0] == uid(); }
+
+    function myGroup(sid) {
+      return get(/databases/$(database)/documents/sessions/$(sid)/students/$(uid())).data.groupId;
+    }
+
+    function lockedByMyGroup(sid, cellId) {
+      return exists(/databases/$(database)/documents/sessions/$(sid)/cellLocks/$(cellId))
+        && get(/databases/$(database)/documents/sessions/$(sid)/cellLocks/$(cellId)).data.groupId
+           == myGroup(sid);
+    }
+
+    match /sessions/{sid} {
+      allow read: if signedIn();
+      allow write: if false;              // 세션 문서 자체는 콘솔에서만 만듭니다
+
+      /* 학생 명단 — 본인 문서만 쓸 수 있고, 지울 수는 없습니다. */
+      match /students/{studentDoc} {
+        allow read: if signedIn();
+        allow create, update: if signedIn()
+          && studentDoc == uid()
+          && request.resource.data.uid == uid()
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 20
+          && request.resource.data.studentId is string
+          && request.resource.data.studentId.size() <= 10
+          && request.resource.data.groupId is int
+          && request.resource.data.groupId >= 1
+          && request.resource.data.groupId <= 6;
+        allow delete: if false;
+      }
+
+      /* 다양성 곡선 위의 탭. 문서 1개 = 학생 1명의 표시 1개.
+         문서 이름이 {uid}_{binId} 라서 30명이 동시에 써도 서로 다른 문서입니다.
+         → 한 문서에 몰리는 쓰기 경합이 원천적으로 없습니다.
+         → 학급 히트맵은 이 컬렉션을 읽어 클라이언트에서 세면 됩니다.
+            (증가 카운터 문서를 만들면 그 문서 하나에 30명이 몰려 병목이 됩니다.) */
+      match /marks/{markId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && ownsDocId(markId)
+          && request.resource.data.uid == uid()
+          && request.resource.data.binId is string;
+        allow delete: if signedIn() && ownsDocId(markId);
+        allow update: if false;           // 수정 대신 지우고 다시 만듭니다
+      }
+
+      /* 가설 법정 칸 점유. create 만 허용하는 것이 곧 잠금장치입니다.
+         두 모둠이 같은 순간에 같은 칸을 눌러도 Firestore 가 하나만 성공시키고
+         나머지는 already-exists 오류를 돌려줍니다. 트랜잭션이 필요 없습니다. */
+      match /cellLocks/{cellId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.uid == uid()
+          && request.resource.data.groupId == myGroup(sid);
+        allow update, delete: if false;   // 점유 해제는 교사만 (서버 경유)
+      }
+
+      /* 판정 결과. 열람은 전체 공개, 쓰기는 점유한 모둠만. */
+      match /claims/{cellId} {
+        allow read: if signedIn();
+        allow create, update: if signedIn() && lockedByMyGroup(sid, cellId);
+        allow delete: if false;
+      }
+
+      /* 형성평가 답안 — 본인 것만 읽고 쓸 수 있습니다.
+         교사 대시보드는 이 규칙을 우회할 수 없으므로,
+         서버(Netlify Function + Admin SDK)를 통해 읽습니다. */
+      match /quizAnswers/{ansId} {
+        allow read, create, update: if signedIn() && ownsDocId(ansId);
+        allow delete: if false;
+      }
+    }
+
+    // 위에서 명시하지 않은 모든 경로는 차단
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
