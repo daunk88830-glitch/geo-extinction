@@ -21,8 +21,14 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function uid() { return request.auth.uid; }
 
-    // "uid_무엇" 형태의 문서 이름에서 앞부분이 내 uid 인지
-    function ownsDocId(id) { return id.split('_')[0] == uid(); }
+    /* "uid_무엇" 형태의 문서 이름에서 앞부분이 내 uid 인지.
+       split('_')[0] 로 하면 uid 안에 밑줄이 들어 있는 경우 검사가 뚫립니다.
+       앞에서부터 uid 길이만큼 잘라 그대로 비교하는 편이 안전합니다. */
+    function ownsDocId(id) {
+      return id.size() > uid().size()
+        && id[0:uid().size()] == uid()
+        && id[uid().size():uid().size() + 1] == '_';
+    }
 
     function myGroup(sid) {
       return get(/databases/$(database)/documents/sessions/$(sid)/students/$(uid())).data.groupId;

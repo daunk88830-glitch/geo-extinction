@@ -141,6 +141,7 @@ button, input, select { font: inherit; color: inherit; }
   color: var(--accent-ink);
   font-weight: 650;
   cursor: pointer;
+  text-decoration: none;   /* <a class="btn"> 도 같은 모양이 되도록 */
 }
 .btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .btn--ghost {

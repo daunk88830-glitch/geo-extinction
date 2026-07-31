@@ -1,6 +1,7 @@
 import './styles/base.css';
 import './styles/home.css';
 import './styles/timeline.css';
+import './styles/explore.css';
 
 import * as store from './store.js';
 import { register, setGuard, start } from './router.js';
@@ -17,6 +18,7 @@ store.loadUserFromStorage();
    첫 화면이 빨리 뜨고, 교실 와이파이에서 초기 로딩이 가벼워집니다. */
 register('#/home', () => import('./views/home.js'));
 register('#/timeline', () => import('./views/timeline.js'));
+register('#/explore', () => import('./views/explore.js'));
 
 /* 로그인 전에는 어떤 화면으로 들어와도 홈으로 보냅니다. */
 setGuard((path) => {

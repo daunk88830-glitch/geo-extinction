@@ -56,9 +56,7 @@ export default async function timeline(outlet) {
             방금 지나온 길의 대부분은 선캄브리아시대였습니다.
             화석이 풍부한 고생대·중생대·신생대를 모두 합쳐도 전체의 약 12%뿐입니다.
           </p>
-          <button class="btn btn--ghost" type="button" disabled>
-            다음 — 데이터 탐구 (준비 중)
-          </button>
+          <a class="btn" href="#/explore">다음 — 데이터 탐구</a>
         </div>
       </section>
     </div>

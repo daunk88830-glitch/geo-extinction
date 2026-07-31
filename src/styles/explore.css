@@ -1,0 +1,239 @@
+/* 차트 계열 색. 다크모드에서 선이 죽지 않도록 따로 잡습니다. */
+:root {
+  --c-div: #3e6b8c;    /* 다양성 */
+  --c-gmst: #c0563e;   /* 기온 */
+  --c-co2: #6b6f8c;    /* 이산화 탄소 */
+  --c-occ: #7d7566;    /* 화석 기록 수 */
+  --c-heat: #b2483c;   /* 학급 히트맵 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-div: #7ab0d6;
+    --c-gmst: #e28d72;
+    --c-co2: #a3a7c9;
+    --c-occ: #b3aa98;
+    --c-heat: #e0806f;
+  }
+}
+
+.ex { padding-bottom: 56px; }
+
+.ex__head { padding: 28px 20px 20px; }
+
+.ex__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.ex__title {
+  font-size: clamp(1.5rem, 6.5vw, 2rem);
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+}
+
+.ex__lead {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.ex__lead b { color: var(--text); }
+
+/* ── 차트 묶음 ───────────────────────────────────────────── */
+.cs {
+  position: relative;
+  padding: 0 4px;
+}
+
+.cs__readout {
+  position: sticky;
+  top: var(--topbar-h);
+  z-index: 15;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  min-height: 46px;
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.cs__ma {
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cs__vals {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.cs__vals b { color: var(--text); font-weight: 650; }
+
+.cs__panel { margin-top: 10px; }
+
+.cs__title {
+  padding-left: 16px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.cs__title em {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.72rem;
+  margin-left: 6px;
+}
+
+/* 캔버스 위에 크로스헤어를 띄우는 영역.
+   touch-action: pan-y 라서 세로 스크롤은 그대로 되고,
+   가로 방향 손가락 움직임만 우리가 받습니다. */
+.cs__canvas {
+  position: relative;
+  height: 150px;
+  touch-action: pan-y;
+}
+.cs__panel[data-key='div'] .cs__canvas { height: 190px; }
+
+.cs__canvas canvas { display: block; }
+
+.cs__cx {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: var(--text);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.cs__axis {
+  margin: 10px 0 0;
+  padding-left: 16px;
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.cs__gap {
+  margin: 6px 0 0;
+  padding: 0 16px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+/* ── 과제 영역 ───────────────────────────────────────────── */
+.ex__task {
+  margin-top: 28px;
+  padding: 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.ex__counter {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.92rem;
+}
+.ex__count {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ex__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 14px;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+.ex__legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+.ex__sw {
+  display: inline-block;
+  width: 16px;
+  height: 10px;
+  border-radius: 1px;
+}
+.ex__sw--mine { background: var(--text); height: 3px; }
+.ex__sw--class {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--c-heat) 20%, transparent),
+    var(--c-heat)
+  );
+}
+
+.ex__msg {
+  min-height: 1.5em;
+  margin-top: 12px;
+  font-size: 0.84rem;
+  color: var(--c-gmst);
+}
+
+.ex__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.ex__actions .btn { flex: 1 1 140px; }
+
+/* ── 확인 후 되돌아보기 ─────────────────────────────────── */
+.ex__reflect {
+  margin-top: 20px;
+  padding: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.ex__reflectTitle {
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+}
+
+.ex__questions {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 0.9rem;
+}
+.ex__questions li { margin-bottom: 8px; }
+
+.ex__reflectNote {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.ex__reflectNote b { color: var(--text); }
+
+.ex__warn {
+  margin-top: 14px;
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--r);
+}
+
+@media (min-width: 720px) {
+  .cs__canvas { height: 180px; }
+  .cs__panel[data-key='div'] .cs__canvas { height: 240px; }
+}

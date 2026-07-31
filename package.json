@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "data": "node scripts/build-data.mjs",
     "build": "vite build",
     "preview": "vite preview"
   },
@@ -12,6 +13,7 @@
     "vite": "^8.2.0"
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
     "firebase": "^12.16.0"
   }
 }

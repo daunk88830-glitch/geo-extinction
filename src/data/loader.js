@@ -36,8 +36,14 @@ export async function loadHypotheses() {
   return json;
 }
 
-/* Day 2 에서 scripts/build-data.mjs 가 data-raw/*.csv 를 변환해
-   아래 두 파일을 만들어 줄 예정입니다. 아직 없습니다.
-export async function loadDiversity() { ... '/data/diversity.json' }
-export async function loadClimate()   { ... '/data/climate.json'   }
-*/
+export async function loadDiversity() {
+  const json = await loadJSON('/data/diversity.json');
+  store.patch('data', { diversity: json });
+  return json;
+}
+
+export async function loadClimate() {
+  const json = await loadJSON('/data/climate.json');
+  store.patch('data', { climate: json });
+  return json;
+}
