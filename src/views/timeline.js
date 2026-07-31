@@ -32,6 +32,14 @@ export default async function timeline(outlet) {
 
   outlet.innerHTML = `
     <div class="tl">
+      <!-- 화면에 고정된 배경 한 장. 시대가 바뀔 때 두 겹이 서로 교차하며 넘어갑니다.
+           구간마다 sticky 로 붙이면 긴 구간에서 끊기거나 겹칠 수 있어
+           고정 한 장을 자바스크립트로 바꾸는 쪽이 확실합니다. -->
+      <div class="tl__stage" aria-hidden="true">
+        <i class="tl__layer tl__layer--on" id="tl-layerA"></i>
+        <i class="tl__layer" id="tl-layerB"></i>
+      </div>
+
       <aside class="tl__rail" aria-hidden="true">
         ${series
           .map((s) => `<i class="tl__seg" data-era="${s.id}" style="flex:${s.sharePercent}"></i>`)
@@ -75,8 +83,23 @@ export default async function timeline(outlet) {
     </div>
   `;
 
-  /* ── 스크롤 → 연대 계산 ─────────────────────────────────── */
-  const flow = outlet.querySelector('#tl-flow');
+  /* ── 스크롤 → 연대 계산 ───────────────────────────────────
+     전체 스크롤 진행률에서 연대를 역산하지 않습니다.
+     그 방식은 "구간 높이 ∝ 기간"이 정확히 성립해야만 맞는데,
+     카드 내용이 min-height 를 넘으면(신생대는 25vh 배정에 내용이 90vh)
+     비례가 깨져서 화면에 보이는 시대와 표시가 어긋납니다.
+     지금 화면 한가운데에 걸린 구간을 찾아 그 안에서 연대를 구합니다. */
+  const sectionOf = {};
+  for (const s of series) sectionOf[s.id] = outlet.querySelector(`#era-${s.id}`);
+
+  // 레일 눈금은 시간 비율이므로 sharePercent 누적으로 계산합니다.
+  const cumBefore = {};
+  let acc = 0;
+  for (const s of series) {
+    cumBefore[s.id] = acc;
+    acc += s.sharePercent;
+  }
+
   const elMa = outlet.querySelector('#tl-ma');
   const elNow = outlet.querySelector('#tl-now');
   const elMarker = outlet.querySelector('#tl-marker');
@@ -85,25 +108,65 @@ export default async function timeline(outlet) {
   let ticking = false;
   let lastEraId = null;
 
+  /* 배경 교차 전환.
+     두 겹을 번갈아 쓰면서 하나는 사라지고 하나는 나타나게 합니다.
+     같은 겹에서 그림만 바꾸면 순간 깜빡입니다. */
+  const layers = [outlet.querySelector('#tl-layerA'), outlet.querySelector('#tl-layerB')];
+  let front = 0;
+
+  function setStage(url) {
+    if (!url) return;
+    const back = 1 - front;
+    layers[back].style.backgroundImage = `url('${url}')`;
+    layers[back].classList.add('tl__layer--on');
+    layers[front].classList.remove('tl__layer--on');
+    front = back;
+  }
+
+  /* 미리 받아 둡니다. 시대가 바뀌는 순간 빈 화면이 스치지 않게. */
+  for (const s of series) {
+    const src = images[s.id]?.scene;
+    if (src) new Image().src = src;
+  }
+
   function measure() {
-    const rect = flow.getBoundingClientRect();
-    const total = flow.offsetHeight - window.innerHeight;
-    const scrolled = Math.min(Math.max(-rect.top, 0), Math.max(total, 1));
-    const p = total > 0 ? scrolled / total : 0;
-    const ma = earthAge * (1 - p);
+    // 화면 한가운데를 기준선으로 삼습니다.
+    const probe = window.innerHeight * 0.5;
 
+    let era = series[0];
+    let within = 0; // 그 구간을 얼마나 지났는지 0~1
+
+    for (const s of series) {
+      const r = sectionOf[s.id].getBoundingClientRect();
+      if (r.top <= probe && r.bottom > probe) {
+        era = s;
+        within = Math.min(Math.max((probe - r.top) / r.height, 0), 1);
+        break;
+      }
+      // 기준선이 이 구간보다 아래에 있으면 계속 다음 구간으로
+      if (r.bottom <= probe) {
+        era = s;
+        within = 1;
+      }
+    }
+
+    // 연대는 그 구간의 시작~끝을 구간 안 진행률로 나눕니다. 항상 정확합니다.
+    const ma = era.startMa + (era.endMa - era.startMa) * within;
     elMa.textContent = fmtAgo(ma);
-    elMarker.style.top = `${(p * 100).toFixed(3)}%`;
 
-    const era = series.find((s) => ma <= s.startMa && ma > s.endMa) ?? series[series.length - 1];
+    // 레일 위치는 시간 비율(sharePercent 누적)로 잡습니다.
+    const railP = (cumBefore[era.id] + era.sharePercent * within) / 100;
+    elMarker.style.top = `${(railP * 100).toFixed(3)}%`;
+
     if (era.id !== lastEraId) {
       lastEraId = era.id;
       elNow.textContent = era.nameKo;
       document.documentElement.style.setProperty('--tl-active', `var(--era-${era.id})`);
+      setStage(images[era.id]?.scene);
     }
 
     // 선캄브리아시대를 지나는 동안에만 탈출구를 띄웁니다.
-    elSkip.hidden = !(era.id === 'precambrian' && p > 0.02);
+    elSkip.hidden = !(era.id === 'precambrian' && within > 0.01);
   }
 
   function onScroll() {
@@ -141,12 +204,6 @@ function eraSection(s, img) {
 
   return `
     <section class="tl__era" id="era-${s.id}" data-era="${s.id}" style="--share:${s.sharePercent}">
-      ${
-        img?.scene
-          ? `<div class="tl__bg" aria-hidden="true" style="background-image:url('${img.scene}')"></div>`
-          : ''
-      }
-
       <header class="tl__pin">
         <span class="tl__pinname">${esc(s.nameKo)}</span>
         <span class="tl__pinshare mono">${s.sharePercent}%</span>

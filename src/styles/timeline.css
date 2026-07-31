@@ -97,26 +97,37 @@
   scroll-margin-top: var(--topbar-h);
 }
 
-/* 시대 배경 그림.
-   sticky 로 붙여 두면 그 시대를 지나는 동안 화면에 그대로 남습니다.
-   (background-attachment: fixed 는 iOS 사파리에서 끊깁니다)
-   margin-bottom 음수로 레이아웃 높이를 차지하지 않게 합니다 — 구간 길이는
-   sharePercent 가 정하는 값이어야 하므로 배경이 늘려서는 안 됩니다. */
-.tl__bg {
-  position: sticky;
-  top: 0;
-  height: 100dvh;
-  margin-bottom: -100dvh;
-  z-index: 0;
-  background-size: cover;
-  background-position: center;
-  opacity: 0.2;
-  filter: blur(1px);
+/* 시대 배경 그림 — 화면에 고정된 한 장.
+   그 시대를 지나는 내내 같은 그림이 연하게 깔려 있다가,
+   다음 대(代)로 넘어가면 부드럽게 다른 그림으로 바뀝니다.
+   z-index -1 이라 본문 뒤, 페이지 바탕색 위에 놓입니다. */
+.tl__stage {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
   pointer-events: none;
+  overflow: hidden;
 }
 
+.tl__layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(2px);
+  transform: scale(1.04);      /* 흐림 처리로 생기는 가장자리 여백을 덮습니다 */
+  opacity: 0;
+  transition: opacity 700ms ease;
+}
+
+.tl__layer--on { opacity: 0.22; }
+
 @media (prefers-color-scheme: dark) {
-  .tl__bg { opacity: 0.16; }
+  .tl__layer--on { opacity: 0.17; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tl__layer { transition: none; }
 }
 
 /* 대 이름은 그 시대를 지나는 내내 화면에 붙어 있습니다. */
@@ -161,11 +172,8 @@
   max-width: 560px;
   margin: 0 auto;
   padding: 32px 20px 44px 22px;
-}
-
-/* 배경 그림이 깔린 구간에서는 글자가 흐려지지 않도록 카드에 바탕을 줍니다. */
-.tl__era:has(.tl__bg) .tl__card {
-  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  /* 배경 그림 위에서도 글자가 또렷하도록 바탕을 깝니다. */
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
   backdrop-filter: blur(6px);
   border-radius: var(--r);
 }
