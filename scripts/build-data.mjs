@@ -130,17 +130,65 @@ function buildClimate() {
   };
 }
 
+/* ── 3. 가설 법정 데이터에서 교사용 항목 덜어내기 ──────────
+   data-raw/hypotheses.json 은 교사용 원본입니다. 정답표가 들어 있습니다.
+     evidenceStrength   어느 칸의 증거가 약한지 = 매트릭스의 정답
+     criteriaAnswerKey  20칸 전체의 기준별 정답
+     teacherNote        칸마다의 지도 요령
+     _meta.pedagogy     모둠 배정 권장 순서
+     rubric_서술형       서술형 채점 기준
+   public/ 에 있는 파일은 브라우저가 통째로 내려받을 수 있으므로,
+   학생이 주소만 알면 정답표를 열어볼 수 있습니다.
+   그래서 학생용 사본을 따로 만들어 내보냅니다.
+
+   심화 보기에 쓰이는 teacherLabel 과 ageMa 는 남깁니다 —
+   교육과정 표기 규칙이 "심화 보기 안에서는 허용"으로 정하고 있습니다. */
+function buildHypothesesPublic() {
+  const src = JSON.parse(readFileSync(join(ROOT, 'data-raw', 'hypotheses.json'), 'utf8'));
+
+  return {
+    _note: '학생용 사본입니다. 교사용 원본은 data-raw/hypotheses.json 에 있습니다.',
+    dataSources: src._meta?.dataSources ?? [],
+
+    criteria: src.criteria.map(({ id, label, tooltip }) => ({ id, label, tooltip })),
+
+    events: src.events.map(({ id, studentLabel, studentEra, teacherLabel, ageMa,
+      marineGenusLossEstimate, distinctiveFeature }) => ({
+      id, studentLabel, studentEra, teacherLabel, ageMa,
+      marineGenusLossEstimate, distinctiveFeature,
+    })),
+
+    hypotheses: src.hypotheses.map(({ id, name, mechanism, evidenceType }) => ({
+      id, name, mechanism, evidenceType,
+    })),
+
+    cells: src.cells.map((c) => ({
+      id: c.id,
+      eventId: c.eventId,
+      hypothesisId: c.hypothesisId,
+      // cards 의 confidence 는 교사가 원문 확인할 카드를 표시한 것이라 뺍니다.
+      cards: (c.cards || []).map(({ claim, detail, sourceType }) => ({
+        claim, detail, sourceType,
+      })),
+      rebuttalSeeds: c.rebuttalSeeds || [],
+    })),
+  };
+}
+
 /* ── 실행 ─────────────────────────────────────────────── */
 mkdirSync(OUT_DIR, { recursive: true });
 
 const diversity = buildDiversity();
 const climate = buildClimate();
+const hypotheses = buildHypothesesPublic();
 
 writeFileSync(join(OUT_DIR, 'diversity.json'), JSON.stringify(diversity), 'utf8');
 writeFileSync(join(OUT_DIR, 'climate.json'), JSON.stringify(climate), 'utf8');
+writeFileSync(join(OUT_DIR, 'hypotheses.json'), JSON.stringify(hypotheses), 'utf8');
 
-console.log(`diversity.json  구간 ${diversity.bins.length}개   ${diversity.ageRangeMa[0]} → ${diversity.ageRangeMa[1]} Ma`);
-console.log(`climate.json    지점 ${climate.points.length}개   ${climate.ageRangeMa[0]} → ${climate.ageRangeMa[1]} Ma`);
+console.log(`diversity.json   구간 ${diversity.bins.length}개   ${diversity.ageRangeMa[0]} → ${diversity.ageRangeMa[1]} Ma`);
+console.log(`climate.json     지점 ${climate.points.length}개   ${climate.ageRangeMa[0]} → ${climate.ageRangeMa[1]} Ma`);
+console.log(`hypotheses.json  칸 ${hypotheses.cells.length}개 (정답표 제거된 학생용)`);
 
 /* 두 데이터의 시간 범위가 다릅니다. 차트에서 이 구간을 비워 두어야 합니다. */
 const gap = diversity.ageRangeMa[0] - climate.ageRangeMa[0];
