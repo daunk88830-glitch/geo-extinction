@@ -110,6 +110,22 @@ service cloud.firestore {
         allow delete: if false;
       }
 
+      /* 선개념 확인 응답. 문서 이름은 {uid}_pre 또는 {uid}_post.
+         목록 읽기를 모든 학생에게 열어 둡니다 — 각자의 화면이 반 전체
+         오개념 분포를 계산해 안내 카드를 재구성해야 하기 때문입니다.
+         그래서 이 문서에는 이름·학번을 넣지 않습니다. uid 와 모둠번호뿐이라
+         목록이 열려도 누가 무엇을 골랐는지 드러나지 않습니다.
+         (교사는 uid 로 students 와 맞춰 봅니다) */
+      match /preconceptions/{docId} {
+        allow read: if signedIn();
+        allow create, update: if signedIn()
+          && ownsDocId(docId)
+          && request.resource.data.uid == uid()
+          && request.resource.data.phase in ['pre', 'post']
+          && request.resource.data.answers is map;
+        allow delete: if false;
+      }
+
       /* 교사 명단. 콘솔에서만 만듭니다. 앱은 절대 쓰지 못합니다. */
       match /teachers/{teacherId} {
         allow read: if signedIn();

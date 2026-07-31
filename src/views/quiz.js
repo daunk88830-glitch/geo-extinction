@@ -1,5 +1,7 @@
 import { loadQuiz, saveAnswer, sectionLink } from '../services/quiz.js';
 import { fetchFeedback } from '../services/ai.js';
+import { QUESTIONS, CHOICES } from '../data/preconceptions.js';
+import { saveResponses, subscribeResponses } from '../services/preconceptions.js';
 import { configured } from '../firebase.js';
 import * as store from '../store.js';
 
@@ -34,6 +36,8 @@ export default async function quiz(outlet) {
 
       <div class="wrap">
         ${items.map((it, i) => renderItem(it, i)).join('')}
+
+        <section class="qz__item" id="qz-post"></section>
 
         <p class="qz__msg" id="qz-msg" role="status"></p>
         <a class="btn btn--ghost qz__done" href="#/court">가설 법정으로 돌아가기</a>
@@ -133,10 +137,96 @@ export default async function quiz(outlet) {
     cleanups.push(() => btn.removeEventListener('click', onSubmit));
   }
 
+  /* ── 사후 선개념 확인 ───────────────────────────────────
+     수업 전에 답했던 다섯 문항을 그대로 다시 묻고, 두 답을 나란히 보여줍니다.
+     정답을 알려주는 대신 "내 생각이 어디서 바뀌었는지"를 보게 하는 것이
+     이 활동의 마무리입니다. */
+  const postBox = outlet.querySelector('#qz-post');
+  const unsubPre = subscribeResponses(() => {});
+  const unsubStore = store.subscribe('preconceptions', renderPost);
+  let postBusy = false;
+
+  function renderPost() {
+    const { pre, post } = store.get('preconceptions');
+
+    if (!pre) {
+      postBox.innerHTML = `
+        <h2 class="qz__q">다시 생각해보기</h2>
+        <p class="qz__lead">수업 시작 전 선개념 확인을 하지 않아 비교할 답이 없습니다.</p>`;
+      return;
+    }
+
+    if (post) {
+      postBox.innerHTML = `
+        <h2 class="qz__q">생각이 이렇게 달라졌습니다</h2>
+        <div class="pc__compare">
+          ${QUESTIONS.map((q) => {
+            const a = pre.answers?.[q.id];
+            const b = post.answers?.[q.id];
+            const changed = a !== b;
+            return `<div class="pc__row">
+              <span>${esc(q.text)}</span>
+              <b class="pc__same">${labelOf(a)}</b>
+              <span class="pc__arrow">→</span>
+              <b class="${changed ? 'pc__changed' : 'pc__same'}">${labelOf(b)}</b>
+            </div>`;
+          }).join('')}
+        </div>`;
+      return;
+    }
+
+    postBox.innerHTML = `
+      <h2 class="qz__q">다시 생각해보기</h2>
+      <p class="qz__lead">수업 시작 전에 답했던 질문입니다. 지금은 어떻게 생각하나요?</p>
+      <form id="qz-postForm">
+        ${QUESTIONS.map(
+          (q, i) => `
+          <fieldset class="pc__q">
+            <legend><span class="pc__num mono">${i + 1}</span>${esc(q.text)}</legend>
+            <div class="pc__choices">
+              ${CHOICES.map(
+                (c) => `<label class="pc__choice">
+                  <input type="radio" name="p-${q.id}" value="${c.value}" />
+                  <span>${c.label}</span>
+                </label>`
+              ).join('')}
+            </div>
+          </fieldset>`
+        ).join('')}
+        <button class="btn pc__submit" type="submit">제출하기</button>
+      </form>`;
+
+    postBox.querySelector('#qz-postForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (postBusy) return;
+
+      const answers = {};
+      for (const q of QUESTIONS) {
+        const picked = postBox.querySelector(`input[name="p-${q.id}"]:checked`);
+        if (!picked) return flash('아직 고르지 않은 질문이 있습니다.');
+        answers[q.id] = picked.value;
+      }
+
+      postBusy = true;
+      const r = await saveResponses('post', answers);
+      postBusy = false;
+      if (r !== 'ok') flash('저장하지 못했습니다.');
+      else if (!configured) renderPost();
+    });
+  }
+
+  renderPost();
+
   return () => {
     clearTimeout(msgTimer);
     cleanups.forEach((fn) => fn());
+    unsubPre();
+    unsubStore();
   };
+}
+
+function labelOf(v) {
+  return CHOICES.find((c) => c.value === v)?.label ?? '—';
 }
 
 function renderItem(it, i) {

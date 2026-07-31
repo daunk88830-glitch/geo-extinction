@@ -7,9 +7,11 @@
     "dev": "vite",
     "data": "node scripts/build-data.mjs",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "images": "node scripts/build-images.mjs"
   },
   "devDependencies": {
+    "jimp": "^1.6.1",
     "vite": "^8.2.0"
   },
   "dependencies": {

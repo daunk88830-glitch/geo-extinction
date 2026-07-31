@@ -5,6 +5,7 @@ import './styles/explore.css';
 import './styles/court.css';
 import './styles/quiz.css';
 import './styles/teacher.css';
+import './styles/precheck.css';
 
 import * as store from './store.js';
 import { register, setGuard, start } from './router.js';
@@ -20,6 +21,7 @@ store.loadUserFromStorage();
 /* 화면은 필요할 때 내려받습니다(동적 import).
    첫 화면이 빨리 뜨고, 교실 와이파이에서 초기 로딩이 가벼워집니다. */
 register('#/home', () => import('./views/home.js'));
+register('#/precheck', () => import('./views/precheck.js'));
 register('#/timeline', () => import('./views/timeline.js'));
 register('#/explore', () => import('./views/explore.js'));
 register('#/court', () => import('./views/court.js'));
@@ -31,7 +33,7 @@ register('#/teacher', () => import('./views/teacher.js'));
 setGuard((path) => {
   if (path === '#/teacher') return null;
   if (!store.isSignedIn() && path !== '#/home') return '#/home';
-  if (store.isSignedIn() && path === '#/home') return '#/timeline';
+  if (store.isSignedIn() && path === '#/home') return '#/precheck';
   return null;
 });
 

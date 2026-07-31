@@ -88,7 +88,8 @@ export default function home(outlet) {
     try {
       // 익명 로그인 + sessions/{세션}/students/{uid} 등록
       await joinClass({ studentId, name, groupId: Number(picked.value) });
-      go('#/timeline');
+      // 타임라인이 아니라 선개념 확인으로 갑니다. 수업 전 상태를 먼저 남깁니다.
+      go('#/precheck');
     } catch (e2) {
       console.error('[home] 로그인 실패:', e2);
       fail(authErrorMessage(e2));

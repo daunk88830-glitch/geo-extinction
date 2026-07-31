@@ -21,6 +21,9 @@ const state = {
   // 이후 단계에서 Firestore 실시간 구독으로 채워질 칸들
   marks: { mine: [], classCounts: {} },
   claims: { locks: {}, byCell: {} },
+
+  // 선개념 확인 — all: 반 전체 응답, pre/post: 내 응답
+  preconceptions: { all: [], pre: null, post: null },
   quiz: { items: [], answers: {}, feedback: {} },
 
   ui: { busy: false, error: null },

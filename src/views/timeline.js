@@ -1,5 +1,18 @@
 import { loadEras } from '../data/loader.js';
 
+/* 시대별 그림은 data-raw/eras-source.png 에서 잘라낸 것입니다.
+   npm run images 로 만들어지며 목록은 era-images.json 에 있습니다. */
+async function loadEraImages() {
+  try {
+    const res = await fetch('/data/era-images.json');
+    if (!res.ok) throw new Error(String(res.status));
+    return (await res.json()).eras || {};
+  } catch (e) {
+    console.warn('[timeline] 시대 그림을 불러오지 못했습니다. 글자만 표시합니다:', e.message);
+    return {};
+  }
+}
+
 /* 타임라인 — 46억 년을 세로 스크롤로 훑습니다.
  *
  * 핵심 설계: 각 대(代)의 세로 길이를 eras.json 의 sharePercent 에 정비례시킵니다.
@@ -13,7 +26,7 @@ import { loadEras } from '../data/loader.js';
 const ERA_ORDER = ['precambrian', 'paleozoic', 'mesozoic', 'cenozoic'];
 
 export default async function timeline(outlet) {
-  const eras = await loadEras();
+  const [eras, images] = await Promise.all([loadEras(), loadEraImages()]);
   const earthAge = eras.earthAgeMa;
   const series = ERA_ORDER.map((id) => eras.series.find((s) => s.id === id)).filter(Boolean);
 
@@ -46,7 +59,7 @@ export default async function timeline(outlet) {
           </div>
         </section>
 
-        ${series.map(eraSection).join('')}
+        ${series.map((s) => eraSection(s, images[s.id])).join('')}
       </div>
 
       <section class="tl__outro">
@@ -120,9 +133,20 @@ export default async function timeline(outlet) {
 }
 
 /* ── 대(代) 한 칸 ────────────────────────────────────────── */
-function eraSection(s) {
+function eraSection(s, img) {
+  /* 그림에 딸린 질문이 있으면(중생대) 오개념 안내를 그냥 보여주지 않고
+     먼저 묻고 나중에 답을 여는 형태로 바꿉니다. 답 문장은 eras.json 의
+     misconceptionNote 를 그대로 씁니다 — 같은 내용을 두 곳에 적지 않습니다. */
+  const q = img?.sceneQuestion;
+
   return `
     <section class="tl__era" id="era-${s.id}" data-era="${s.id}" style="--share:${s.sharePercent}">
+      ${
+        img?.scene
+          ? `<div class="tl__bg" aria-hidden="true" style="background-image:url('${img.scene}')"></div>`
+          : ''
+      }
+
       <header class="tl__pin">
         <span class="tl__pinname">${esc(s.nameKo)}</span>
         <span class="tl__pinshare mono">${s.sharePercent}%</span>
@@ -132,6 +156,27 @@ function eraSection(s) {
         <p class="tl__eyebrow mono">전체의 ${s.sharePercent}% · ${fmtDuration(s.durationMa)}</p>
         <h2 class="tl__eratitle">${esc(s.nameKo)}</h2>
         <p class="tl__lead">${esc(s.headline)}</p>
+
+        ${
+          img?.scene
+            ? `<figure class="tl__scene">
+                 <img src="${img.scene}" alt="${esc(img.sceneAlt || s.nameKo + ' 상상도')}" loading="lazy" />
+               </figure>`
+            : ''
+        }
+
+        ${
+          q
+            ? `<aside class="tl__ask">
+                 <b>${esc(q.ask)}</b>
+                 <p>${esc(q.hint)}</p>
+                 <details>
+                   <summary>확인하기</summary>
+                   <p>${esc(s.misconceptionNote || '')}</p>
+                 </details>
+               </aside>`
+            : ''
+        }
 
         <h3 class="tl__h3">환경</h3>
         <p>${esc(s.environment)}</p>
@@ -151,13 +196,26 @@ function eraSection(s) {
             ? `<h3 class="tl__h3">이 시대에 살았던 생물</h3>
                <ul class="tl__life">${s.representativeLife
                  .map((l) => `<li>${esc(l)}</li>`)
-                 .join('')}</ul>
-               <p class="tl__caption">교과서에 나온 예시입니다. 이름을 외울 필요는 없습니다.</p>`
+                 .join('')}</ul>`
             : ''
         }
 
         ${
-          s.misconceptionNote
+          img?.fossils?.length
+            ? `<h3 class="tl__h3">이 시대의 대표 표준화석</h3>
+               <ul class="tl__fossils">${img.fossils
+                 .map(
+                   (f) => `<li>
+                     <img src="${f.src}" alt="${esc(f.label)} 화석 사진" loading="lazy" />
+                     <span>${esc(f.label)}</span>
+                   </li>`
+                 )
+                 .join('')}</ul>`
+            : ''
+        }
+
+        ${
+          s.misconceptionNote && !q
             ? `<aside class="tl__note"><b>헷갈리기 쉬운 점</b><p>${esc(s.misconceptionNote)}</p></aside>`
             : ''
         }

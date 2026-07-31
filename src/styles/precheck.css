@@ -1,0 +1,220 @@
+.pc { padding-bottom: 64px; }
+
+.pc__head { padding: 28px 20px 18px; }
+
+.pc__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.pc__title {
+  font-size: clamp(1.5rem, 6.5vw, 2rem);
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+}
+
+.pc__lead { color: var(--muted); font-size: 0.93rem; }
+.pc__lead b { color: var(--text); }
+
+/* ── 문항 ───────────────────────────────────────────────── */
+.pc__q {
+  margin: 0 0 26px;
+  padding: 0 0 22px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+}
+.pc__q:last-of-type { border-bottom: 0; }
+
+.pc__q legend {
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin-bottom: 14px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.pc__num {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  vertical-align: 2px;
+}
+
+.pc__choices {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.pc__choice { position: relative; display: block; }
+.pc__choice input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.pc__choice span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 4px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  cursor: pointer;
+  user-select: none;
+}
+.pc__choice input:checked + span {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.pc__choice input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pc__submit { width: 100%; margin-top: 10px; }
+
+.pc__warn {
+  margin-top: 16px;
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--r);
+}
+
+/* ── 결과 카드 ──────────────────────────────────────────── */
+.pc__card {
+  margin-bottom: 10px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+/* 반에서 많이 나온 두 가지는 눈에 먼저 들어오게 합니다. */
+.pc__card--top {
+  border-color: var(--accent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.pc__cardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.pc__cardHead b { font-size: 1rem; letter-spacing: -0.01em; }
+
+.pc__pct {
+  flex: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.pc__why { font-size: 0.9rem; }
+.pc__where { margin-top: 8px; font-size: 0.84rem; color: var(--muted); }
+
+.pc__cardFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.pc__tag {
+  font-size: 0.72rem;
+  font-weight: 650;
+  padding: 3px 8px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+}
+.pc__tag--class {
+  background: var(--surface-2);
+  color: var(--muted);
+}
+
+.pc__go { font-size: 0.84rem; font-weight: 650; color: var(--accent); }
+
+.pc__none {
+  padding: 18px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.pc__none b { display: block; margin-bottom: 6px; }
+.pc__none p { font-size: 0.88rem; color: var(--muted); }
+
+/* ── 내가 고른 답 ───────────────────────────────────────── */
+.pc__mine {
+  margin-top: 30px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+}
+
+.pc__h2 {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.pc__mineNote { font-size: 0.82rem; color: var(--muted); margin-bottom: 12px; }
+
+.pc__mineList { list-style: none; margin: 0; padding: 0; }
+.pc__mineList li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.86rem;
+}
+.pc__mineList li:last-child { border-bottom: 0; }
+.pc__mineList b { flex: none; color: var(--accent); }
+
+.pc__next { width: 100%; margin-top: 26px; }
+
+/* ── 사후 비교 (형성평가 안에서 쓰입니다) ───────────────── */
+.pc__compare { margin-top: 14px; }
+
+.pc__row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.86rem;
+}
+.pc__row:last-child { border-bottom: 0; }
+.pc__row span:first-child { line-height: 1.4; }
+.pc__row b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pc__arrow { color: var(--muted); }
+.pc__changed { color: var(--ok); font-weight: 700; }
+.pc__same { color: var(--muted); }
