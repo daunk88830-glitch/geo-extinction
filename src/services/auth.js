@@ -54,6 +54,11 @@ export function restoreAuth() {
   if (!configured) return;
 
   onAuthStateChanged(auth, async (user) => {
+    /* 교사 계정(이메일 로그인)일 때는 학생 상태를 건드리지 않습니다.
+       같은 브라우저를 시연용으로 썼더라도 교사 uid 가 학생 기록에
+       섞이지 않게 하는 부분입니다. */
+    if (user && !user.isAnonymous) return;
+
     if (user) {
       store.patch('user', { uid: user.uid });
       store.saveUserToStorage();

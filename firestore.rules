@@ -34,6 +34,13 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/sessions/$(sid)/students/$(uid())).data.groupId;
     }
 
+    /* 교사인지. sessions/{세션}/teachers/{uid} 문서가 있으면 교사입니다.
+       이 문서는 Firebase 콘솔에서 손으로 만듭니다(아래 teachers 규칙이 쓰기를 막습니다).
+       서비스 계정 키를 외부에 두지 않고 교사 권한을 주기 위한 장치입니다. */
+    function isTeacher(sid) {
+      return exists(/databases/$(database)/documents/sessions/$(sid)/teachers/$(uid()));
+    }
+
     function lockedByMyGroup(sid, cellId) {
       return exists(/databases/$(database)/documents/sessions/$(sid)/cellLocks/$(cellId))
         && get(/databases/$(database)/documents/sessions/$(sid)/cellLocks/$(cellId)).data.groupId
@@ -87,18 +94,36 @@ service cloud.firestore {
         allow update, delete: if false;   // 점유 해제는 교사만 (서버 경유)
       }
 
-      /* 판정 결과. 열람은 전체 공개, 쓰기는 점유한 모둠만. */
+      /* 판정 결과. 열람은 전체 공개, 쓰기는 점유한 모둠만.
+         한 모둠 안에서 5~6명이 동시에 편집하므로 앱은 항상 merge 로 씁니다.
+         서로 다른 기준을 만지면 충돌 없이 둘 다 남습니다.
+         (같은 기준의 서술을 동시에 고치는 경우는 화면 실시간 반영으로 피합니다.) */
       match /claims/{cellId} {
         allow read: if signedIn();
-        allow create, update: if signedIn() && lockedByMyGroup(sid, cellId);
+        allow create, update: if signedIn()
+          && lockedByMyGroup(sid, cellId)
+          && request.resource.data.cellId == cellId
+          && request.resource.data.groupId == myGroup(sid)
+          && request.resource.data.status in ['draft', 'submitted']
+          && request.resource.data.scores.keys().hasOnly(['C1', 'C2', 'C3', 'C4'])
+          && request.resource.data.reasons.keys().hasOnly(['C1', 'C2', 'C3', 'C4']);
         allow delete: if false;
       }
 
-      /* 형성평가 답안 — 본인 것만 읽고 쓸 수 있습니다.
-         교사 대시보드는 이 규칙을 우회할 수 없으므로,
-         서버(Netlify Function + Admin SDK)를 통해 읽습니다. */
+      /* 교사 명단. 콘솔에서만 만듭니다. 앱은 절대 쓰지 못합니다. */
+      match /teachers/{teacherId} {
+        allow read: if signedIn();
+        allow write: if false;
+      }
+
+      /* 형성평가 답안.
+         쓰기는 본인만. 읽기는 본인(get) 또는 교사(list) 입니다.
+         get 과 list 를 나눈 이유: 학생이 컬렉션 전체를 훑으면 친구의 답안이
+         딸려 나옵니다. list 를 교사에게만 열면 그 경로가 막힙니다. */
       match /quizAnswers/{ansId} {
-        allow read, create, update: if signedIn() && ownsDocId(ansId);
+        allow get: if signedIn() && (ownsDocId(ansId) || isTeacher(sid));
+        allow list: if signedIn() && isTeacher(sid);
+        allow create, update: if signedIn() && ownsDocId(ansId);
         allow delete: if false;
       }
     }

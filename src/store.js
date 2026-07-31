@@ -20,7 +20,7 @@ const state = {
 
   // 이후 단계에서 Firestore 실시간 구독으로 채워질 칸들
   marks: { mine: [], classCounts: {} },
-  claims: { byCell: {} },
+  claims: { locks: {}, byCell: {} },
   quiz: { items: [], answers: {}, feedback: {} },
 
   ui: { busy: false, error: null },

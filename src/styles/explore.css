@@ -223,6 +223,11 @@
 }
 .ex__reflectNote b { color: var(--text); }
 
+.ex__next {
+  width: 100%;
+  margin-top: 18px;
+}
+
 .ex__warn {
   margin-top: 14px;
   padding: 12px 14px;

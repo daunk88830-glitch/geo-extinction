@@ -2,6 +2,9 @@ import './styles/base.css';
 import './styles/home.css';
 import './styles/timeline.css';
 import './styles/explore.css';
+import './styles/court.css';
+import './styles/quiz.css';
+import './styles/teacher.css';
 
 import * as store from './store.js';
 import { register, setGuard, start } from './router.js';
@@ -19,9 +22,14 @@ store.loadUserFromStorage();
 register('#/home', () => import('./views/home.js'));
 register('#/timeline', () => import('./views/timeline.js'));
 register('#/explore', () => import('./views/explore.js'));
+register('#/court', () => import('./views/court.js'));
+register('#/quiz', () => import('./views/quiz.js'));
+register('#/teacher', () => import('./views/teacher.js'));
 
-/* 로그인 전에는 어떤 화면으로 들어와도 홈으로 보냅니다. */
+/* 로그인 전에는 어떤 화면으로 들어와도 홈으로 보냅니다.
+   교사 화면만 예외입니다 — 학생 로그인과 별개로 자체 로그인을 씁니다. */
 setGuard((path) => {
+  if (path === '#/teacher') return null;
   if (!store.isSignedIn() && path !== '#/home') return '#/home';
   if (store.isSignedIn() && path === '#/home') return '#/timeline';
   return null;

@@ -67,6 +67,7 @@ export default async function explore(outlet) {
             그래서 이 그래프만으로는 "조사가 덜 된 것"과 "정말 생물이 사라진 것"을 가릴 수 없습니다.
             암석과 지층에서 나온 다른 증거가 필요합니다 — 다음 활동인 <b>가설 법정</b>이 그 일을 합니다.
           </p>
+          <a class="btn ex__next" href="#/court">다음 — 가설 법정</a>
         </div>
 
         ${

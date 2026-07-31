@@ -1,0 +1,13 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# 해시 라우터를 쓰므로 모든 경로를 index.html 로 돌려보냅니다.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

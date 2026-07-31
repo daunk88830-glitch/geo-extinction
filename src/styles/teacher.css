@@ -1,0 +1,217 @@
+.tc { padding-bottom: 64px; }
+
+.tc__eyebrow {
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.tc__title {
+  font-size: clamp(1.4rem, 6vw, 1.9rem);
+  letter-spacing: -0.03em;
+}
+
+.tc__lead { margin-top: 10px; color: var(--muted); font-size: 0.92rem; }
+
+/* ── 로그인 ─────────────────────────────────────────────── */
+.tc__login { padding: clamp(32px, 8vh, 72px) 20px 48px; }
+.tc__login form { margin-top: 26px; }
+
+.tc__note {
+  margin-top: 22px;
+  padding: 12px 14px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--r);
+}
+
+.tc__warn {
+  margin-top: 16px;
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  background: var(--surface-2);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--r);
+}
+
+/* ── 헤더 ───────────────────────────────────────────────── */
+.tc__head { padding: 26px 20px 0; }
+
+.tc__headRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.tc__out { min-height: 40px; padding: 0 14px; font-size: 0.82rem; flex: none; }
+
+.tc__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.tc__stat {
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  text-align: center;
+}
+.tc__stat b {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.tc__stat span { font-size: 0.72rem; color: var(--muted); }
+
+.tc__alert {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  border: 1px solid var(--danger);
+  border-radius: var(--r);
+  font-size: 0.88rem;
+}
+.tc__alert b { display: block; margin-bottom: 6px; }
+
+/* ── 섹션 ───────────────────────────────────────────────── */
+.tc__sec { margin-top: 34px; padding: 0 20px; }
+
+.tc__secHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.tc__cluster { min-height: 40px; padding: 0 14px; font-size: 0.8rem; }
+
+.tc__h2 {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.tc__h2 em { font-style: normal; font-weight: 400; letter-spacing: 0; }
+.tc__secHead .tc__h2 { margin-bottom: 0; }
+
+.tc__empty { font-size: 0.86rem; color: var(--muted); }
+
+/* ── 정답률 ─────────────────────────────────────────────── */
+.tc__rate { margin-bottom: 18px; }
+
+.tc__rateHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.tc__rateQ { font-size: 0.88rem; line-height: 1.4; }
+.tc__rateHead b { font-variant-numeric: tabular-nums; flex: none; }
+
+.tc__bar {
+  height: 8px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.tc__bar i {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+}
+
+.tc__rateSub {
+  margin-top: 5px;
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--danger) calc(var(--heat) * 100%), var(--muted));
+}
+
+/* ── 모둠 ───────────────────────────────────────────────── */
+.tc__groups {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.tc__group {
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.tc__group b { font-size: 0.88rem; margin-right: 8px; }
+.tc__group span { font-variant-numeric: tabular-nums; font-weight: 700; }
+.tc__group em {
+  display: block;
+  margin-top: 4px;
+  font-style: normal;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+/* ── 서술형 ─────────────────────────────────────────────── */
+.tc__answer {
+  margin-bottom: 10px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.tc__ahead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.tc__ahead b { font-size: 0.9rem; }
+.tc__ahead span { font-size: 0.72rem; color: var(--muted); }
+
+.tc__atext { font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap; }
+
+.tc__alevel {
+  margin-top: 10px;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.tc__alevel[data-low='true'] { color: var(--danger); }
+
+/* ── 클러스터 ───────────────────────────────────────────── */
+.tc__clusters { margin-bottom: 20px; }
+
+.tc__cluster {
+  margin-bottom: 10px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--r);
+  font-size: 0.88rem;
+}
+.tc__chead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.tc__chead b { font-size: 0.95rem; }
+.tc__chead span { font-size: 0.75rem; color: var(--muted); }
+
+.tc__csuggest { margin-top: 8px; font-weight: 600; }
+.tc__cnames { margin-top: 8px; font-size: 0.75rem; color: var(--muted); }
+
+@media (min-width: 720px) {
+  .tc__groups { grid-template-columns: repeat(3, 1fr); }
+}
