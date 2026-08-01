@@ -195,7 +195,11 @@ export default async function timeline(outlet) {
   };
 }
 
-/* ── 대(代) 한 칸 ────────────────────────────────────────── */
+/* ── 대(代) 한 칸 ──────────────────────────────────────────
+   내용을 한 덩어리로 두지 않고 주제별 카드로 나눕니다.
+   환경 → 생물 → 주요 사건 → 대표 표준화석 순서로, 한 장에 한 가지만.
+   스크롤로 시간을 겪는 화면이라 세로로 쌓는 편이 맞습니다.
+   가로로 넘기게 하면 뒤 카드를 못 보고 지나치는 학생이 생깁니다. */
 function eraSection(s, img) {
   /* 그림에 딸린 질문이 있으면(중생대) 오개념 안내를 그냥 보여주지 않고
      먼저 묻고 나중에 답을 여는 형태로 바꿉니다. 답 문장은 eras.json 의
@@ -235,60 +239,106 @@ function eraSection(s, img) {
             : ''
         }
 
-        <h3 class="tl__h3">환경</h3>
-        <p>${esc(s.environment)}</p>
-
-        <h3 class="tl__h3">생물</h3>
-        <p>${esc(s.lifeSummary)}</p>
-
-        ${
-          s.keyEvents?.length
-            ? `<h3 class="tl__h3">주요 사건</h3>
-               <ul class="tl__events">${s.keyEvents.map((e) => `<li>${esc(e)}</li>`).join('')}</ul>`
-            : ''
-        }
-
-        ${
-          s.representativeLife?.length
-            ? `<h3 class="tl__h3">이 시대에 살았던 생물</h3>
-               <ul class="tl__life">${s.representativeLife
-                 .map((l) => `<li>${esc(l)}</li>`)
-                 .join('')}</ul>`
-            : ''
-        }
-
-        ${
-          img?.fossils?.length
-            ? `<h3 class="tl__h3">이 시대의 대표 표준화석</h3>
-               <ul class="tl__fossils">${img.fossils
-                 .map(
-                   (f) => `<li>
-                     <img src="${f.src}" alt="${esc(f.label)} 화석 사진" loading="lazy" />
-                     <span>${esc(f.label)}</span>
-                   </li>`
-                 )
-                 .join('')}</ul>`
-            : ''
-        }
-
         ${
           s.misconceptionNote && !q
             ? `<aside class="tl__note"><b>헷갈리기 쉬운 점</b><p>${esc(s.misconceptionNote)}</p></aside>`
             : ''
         }
-
-        ${
-          s.glossary
-            ? `<dl class="tl__glossary">${Object.entries(s.glossary)
-                .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`)
-                .join('')}</dl>`
-            : ''
-        }
       </div>
+
+      ${topicCards(s, img)}
 
       <div class="tl__span" aria-hidden="true"></div>
     </section>
   `;
+}
+
+/* 주제 카드 — 한 장에 한 가지.
+ *
+ * 순서: 환경 · 주요 사건  /  생물 · 표준화석
+ * 넓은 화면에서는 두 칸씩 나란히 놓여 위 두 장이 "무대", 아래 두 장이
+ * "그 무대에 살던 것"으로 읽힙니다.
+ * 좁은 화면(학생 스마트폰)에서는 한 줄로 내려오는데, 그때도 이 순서가
+ * 자연스럽게 이어집니다.
+ */
+function topicCards(s, img) {
+  const cards = [];
+
+  cards.push({
+    key: 'env',
+    label: '환경',
+    body:
+      points(s.environmentPoints, s.environment) +
+      (s.glossary
+        ? `<dl class="tl__glossary">${Object.entries(s.glossary)
+            .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`)
+            .join('')}</dl>`
+        : ''),
+  });
+
+  if (s.keyEvents?.length) {
+    cards.push({
+      key: 'events',
+      label: '주요 사건',
+      body: `<ul class="tl__events">${s.keyEvents.map((e) => `<li>${esc(e)}</li>`).join('')}</ul>`,
+    });
+  }
+
+  cards.push({
+    key: 'life',
+    label: '이 시대에 살았던 생물',
+    body:
+      points(s.lifePoints, s.lifeSummary) +
+      (s.representativeLife?.length
+        ? `<ul class="tl__life">${s.representativeLife
+            .map((l) => `<li>${esc(l)}</li>`)
+            .join('')}</ul>`
+        : ''),
+  });
+
+  if (img?.fossils?.length) {
+    cards.push({
+      key: 'fossil',
+      label: '이 시대의 대표 표준화석',
+      body: `<ul class="tl__fossils">${img.fossils
+        .map(
+          (f) => `<li>
+            <img src="${f.src}" alt="${esc(f.label)} 화석 사진" loading="lazy" />
+            <span>${esc(f.label)}</span>
+          </li>`
+        )
+        .join('')}</ul>`,
+    });
+  }
+
+  return `<div class="tl__grid">${cards
+    .map(
+      (c, i) => `
+      <article class="tl__topic" data-topic="${c.key}">
+        <header class="tl__topicHead">
+          <h3 class="tl__topicLabel">${c.label}</h3>
+          <span class="tl__topicNo mono">${i + 1} / ${cards.length}</span>
+        </header>
+        ${c.body}
+      </article>`
+    )
+    .join('')}</div>`;
+}
+
+/* 요점 목록 + 교과서 원문.
+ * 화면에는 짧은 요점만 보여 줍니다. 줄글은 스마트폰에서 읽히지 않습니다.
+ * 다만 교과서 문장 자체가 근거 자료라, 접어 두고 필요할 때 펼치게 합니다. */
+function points(list, full) {
+  if (!list?.length) return `<p class="tl__body">${esc(full ?? '')}</p>`;
+  return (
+    `<ul class="tl__points">${list.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>` +
+    (full
+      ? `<details class="tl__full">
+           <summary>교과서 문장으로 보기</summary>
+           <p>${esc(full)}</p>
+         </details>`
+      : '')
+  );
 }
 
 /* ── 숫자 표기 ──────────────────────────────────────────── */
