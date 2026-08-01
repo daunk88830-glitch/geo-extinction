@@ -37,10 +37,28 @@ export const configured = Object.values(cfg).every((v) => typeof v === 'string' 
  *   3) .env 의 기본값        아무것도 없을 때
  *
  * 앞에 붙는 VITE_SESSION_PREFIX 는 학기 구분용입니다.
- * 예: 접두사 "2026-1학기-" + 반 "3반" → "2026-1학기-3반"
+ * 예: 접두사 "2026-2학기-" + 반 "3반" → "2026-2학기-3반"
  * 내년에 같은 반 번호를 다시 써도 자료가 섞이지 않습니다.
  */
-const SESSION_PREFIX = import.meta.env.VITE_SESSION_PREFIX || '';
+
+/* 접두사 끝의 구분자를 여기서 보장합니다.
+ *
+ * 이 값은 배포 사이트의 환경변수 칸에 손으로 입력하는데, 끝의 하이픈을
+ * 빠뜨리기 아주 쉽습니다("2026-2학기"). 그러면 세션 이름이 "2026-2학기3반"
+ * 이 되어 읽기 나쁩니다. 더 나쁜 건, 수업을 한 뒤에 하이픈을 뒤늦게
+ * 채워 넣으면 세션 이름이 통째로 바뀌어 그 반의 자료가 안 보이게 된다는
+ * 점입니다. 입력이 어느 쪽이든 같은 결과가 나오게 여기서 맞춰 둡니다.
+ *
+ * 빈 값은 "접두사를 안 쓰겠다"는 뜻이므로 그대로 둡니다.
+ * 세션 이름은 Firestore 문서 이름이 되므로 '/' 는 절대 만들지 않습니다.
+ */
+function normalizePrefix(raw) {
+  const p = String(raw ?? '').trim();
+  if (!p) return '';
+  return /[-_]$/.test(p) ? p : `${p}-`;
+}
+
+const SESSION_PREFIX = normalizePrefix(import.meta.env.VITE_SESSION_PREFIX);
 const LS_SESSION = 'geo:session';
 
 function resolveSession() {
@@ -60,7 +78,13 @@ function resolveSession() {
   } catch {
     /* 사생활 보호 모드 등에서 저장이 막혀 있어도 아래 기본값으로 이어집니다. */
   }
-  return import.meta.env.VITE_SESSION_ID || 'default';
+
+  /* 여기까지 왔다면 반이 아직 안 정해진 상태입니다(홈을 거치지 않고
+     바로 들어온 경우 등). 이 예비 세션에도 같은 접두사를 붙입니다.
+     안 붙이면 학기 칸막이 바깥에 세션이 하나 생겨서, 거기 쌓인 자료가
+     교사 대시보드의 어느 반에서도 안 보입니다. */
+  const fallback = String(import.meta.env.VITE_SESSION_ID ?? '').trim();
+  return SESSION_PREFIX + (fallback || 'default');
 }
 
 let sessionId = resolveSession();
