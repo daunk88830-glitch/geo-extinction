@@ -49,6 +49,25 @@
 }
 .tc__out { min-height: 40px; padding: 0 14px; font-size: 0.82rem; flex: none; }
 
+/* 반 선택 — 세션을 바꾸면 모든 자료가 그 반 것으로 다시 붙습니다. */
+.tc__pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+.tc__pick select {
+  min-height: 40px;
+  padding: 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  font-weight: 650;
+  color: var(--text);
+}
+
 .tc__stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

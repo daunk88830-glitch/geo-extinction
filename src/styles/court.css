@@ -3,30 +3,206 @@
 .ct__head { padding: 28px 20px 20px; }
 
 .ct__eyebrow {
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
   color: var(--muted);
   margin-bottom: 8px;
 }
 
+/* 제목 두 개만 크기를 그대로 둡니다. */
 .ct__title {
   font-size: clamp(1.5rem, 6.5vw, 2rem);
   letter-spacing: -0.03em;
   margin-bottom: 12px;
 }
+.ct__dtitle {
+  font-size: clamp(1.4rem, 6vw, 1.9rem);
+  letter-spacing: -0.03em;
+}
 
-.ct__lead {
+.ct__lead { color: var(--muted); font-size: 1.03rem; line-height: 1.6; }
+.ct__lead b { color: var(--text); }
+
+.ct__h2 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   color: var(--muted);
-  font-size: 0.93rem;
+  margin-bottom: 14px;
+}
+.ct__h2 em { font-style: normal; font-weight: 400; letter-spacing: 0; }
+
+.ct__h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 22px 0 10px;
+}
+.ct__h3 em { font-style: normal; font-weight: 400; color: var(--muted); font-size: 0.88rem; }
+
+.ct__body { font-size: 1.03rem; line-height: 1.7; }
+
+.ct__sub { font-size: 0.95rem; line-height: 1.6; color: var(--muted); margin-bottom: 14px; }
+.ct__sub b { color: var(--text); }
+
+/* ── 모둠 색 ─────────────────────────────────────────────
+   1 빨강 · 2 주황 · 3 노랑 · 4 초록 · 5 파랑 · 6 보라
+   순수한 노랑은 흰 바탕에서 글자가 안 보여 호박색 쪽으로 내렸습니다. */
+[data-group='1'] { --g: #c0392b; }
+[data-group='2'] { --g: #d2803a; }
+[data-group='3'] { --g: #b8912a; }
+[data-group='4'] { --g: #4f8a4b; }
+[data-group='5'] { --g: #3e6b8c; }
+[data-group='6'] { --g: #7a5c99; }
+
+@media (prefers-color-scheme: dark) {
+  [data-group='1'] { --g: #e07a6b; }
+  [data-group='2'] { --g: #e8a45f; }
+  [data-group='3'] { --g: #dbbf5c; }
+  [data-group='4'] { --g: #86bd80; }
+  [data-group='5'] { --g: #6fa3c9; }
+  [data-group='6'] { --g: #b096cc; }
 }
 
-/* ── 5 × 4 매트릭스 ──────────────────────────────────────
-   좁은 화면에서는 가로 스크롤이 생깁니다. 사건 이름 열은 붙여 둡니다. */
-.ct__matrixWrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 12px;
+.ct__groupKey {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 16px;
+  padding: 0 20px;
+  font-size: 0.82rem;
+  color: var(--muted);
 }
+.ct__groupKey span { display: inline-flex; align-items: center; gap: 5px; }
+.ct__groupKey i { width: 12px; height: 12px; border-radius: 2px; background: var(--g); }
+.ct__groupKey span:nth-child(1) { --g: #c0392b; }
+.ct__groupKey span:nth-child(2) { --g: #d2803a; }
+.ct__groupKey span:nth-child(3) { --g: #b8912a; }
+.ct__groupKey span:nth-child(4) { --g: #4f8a4b; }
+.ct__groupKey span:nth-child(5) { --g: #3e6b8c; }
+.ct__groupKey span:nth-child(6) { --g: #7a5c99; }
+
+@media (prefers-color-scheme: dark) {
+  .ct__groupKey span:nth-child(1) { --g: #e07a6b; }
+  .ct__groupKey span:nth-child(2) { --g: #e8a45f; }
+  .ct__groupKey span:nth-child(3) { --g: #dbbf5c; }
+  .ct__groupKey span:nth-child(4) { --g: #86bd80; }
+  .ct__groupKey span:nth-child(5) { --g: #6fa3c9; }
+  .ct__groupKey span:nth-child(6) { --g: #b096cc; }
+}
+
+/* ── 사건 목록 ──────────────────────────────────────────── */
+.ct__events { padding: 0 20px; display: grid; gap: 10px; }
+
+.ct__event {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px 12px;
+  width: 100%;
+  padding: 16px 18px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  color: var(--text);
+  cursor: pointer;
+}
+.ct__event--free { border-style: dashed; }
+.ct__event--free:hover { border-color: var(--accent); }
+
+.ct__event--mine,
+.ct__event--other,
+.ct__event--done {
+  border-color: var(--g, var(--line-strong));
+  box-shadow: inset 4px 0 0 var(--g, var(--line-strong));
+  background: color-mix(in srgb, var(--g, var(--surface)) 8%, var(--surface));
+}
+
+.ct__eventName b { font-size: 1.1rem; letter-spacing: -0.02em; }
+.ct__eventName em {
+  font-style: normal;
+  font-size: 0.86rem;
+  color: var(--muted);
+  margin-left: 8px;
+}
+.ct__eventState {
+  grid-column: 1;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+.ct__eventGo {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--g, var(--accent));
+  white-space: nowrap;
+}
+
+/* ── 네 가설 과정 카드 ───────────────────────────────────── */
+.ct__guide { margin-top: 30px; padding: 0 20px; }
+.ct__mechs { display: grid; gap: 12px; }
+
+.ct__mech {
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.ct__mechHead { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.ct__mechHead b { font-size: 1.05rem; letter-spacing: -0.02em; }
+
+.ct__mechIcon { flex: none; width: 36px; height: 36px; color: var(--accent); }
+.ct__mechIcon svg { width: 100%; height: 100%; display: block; }
+
+.ct__chain { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.ct__chain li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 10px;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.ct__chain li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0.1em;
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+}
+.ct__chain li:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: calc(0.1em + 22px);
+  bottom: -8px;
+  border-left: 1px dashed var(--line-strong);
+}
+
+.ct__mechNote {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 0.93rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.ct__mechEv { margin-top: 8px; font-size: 0.9rem; color: var(--muted); }
+.ct__mechEv b { color: var(--text); margin-right: 4px; }
+
+/* ── 학급 전체 결과판 ───────────────────────────────────── */
+.ct__board { margin-top: 34px; padding: 0 20px; }
+.ct__boardWrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 .ct__matrix {
   width: 100%;
@@ -34,96 +210,48 @@
   border-collapse: separate;
   border-spacing: 4px;
 }
-
 .ct__matrix th[scope='col'] {
   padding: 6px 2px;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   font-weight: 650;
   color: var(--muted);
   text-align: center;
-  vertical-align: bottom;
 }
-
 .ct__matrix th[scope='row'] {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  width: 84px;
+  width: 92px;
   padding: 8px 10px 8px 4px;
-  background: var(--bg);
   text-align: left;
   vertical-align: middle;
+  border-left: 4px solid var(--g, transparent);
 }
-.ct__matrix th[scope='row'] b {
-  display: block;
-  font-size: 0.82rem;
-  letter-spacing: -0.01em;
-}
+.ct__matrix th[scope='row'] b { display: block; font-size: 0.88rem; }
 .ct__matrix th[scope='row'] em {
   display: block;
   font-style: normal;
-  font-size: 0.68rem;
-  color: var(--muted);
+  font-size: 0.74rem;
+  color: var(--g, var(--muted));
   margin-top: 2px;
 }
 
-.ct__corner {
-  position: sticky;
-  left: 0;
-  z-index: 2;
-  background: var(--bg);
-}
-
-/* 칸. evidenceStrength 는 여기에 절대 반영하지 않습니다.
-   증거가 없는 칸도 겉보기에는 똑같아야 학생이 직접 확인하게 됩니다. */
-.ct__cell {
-  width: 100%;
-  min-height: 56px;
-  padding: 6px 4px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  line-height: 1.3;
-  border: 1px solid var(--line-strong);
+.ct__verdict {
+  position: relative;
+  padding: 10px 4px;
+  text-align: center;
+  font-size: 0.8rem;
   border-radius: var(--r);
-  background: var(--surface);
-  color: var(--muted);
-  cursor: pointer;
-}
-
-.ct__cell--free { border-style: dashed; }
-.ct__cell--free:hover { border-color: var(--accent); color: var(--accent); }
-
-.ct__cell--mine {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-ink);
-}
-
-.ct__cell--other {
   background: var(--surface-2);
   color: var(--muted);
 }
+.ct__verdict--well { background: color-mix(in srgb, var(--ok) 22%, var(--surface)); color: var(--ok); }
+.ct__verdict--partly { background: color-mix(in srgb, var(--era-cenozoic) 20%, var(--surface)); }
+.ct__verdict--no { background: var(--surface-2); color: var(--muted); }
+.ct__verdict--chosen { outline: 2px solid var(--accent); font-weight: 700; }
+.ct__verdict i { font-style: normal; margin-left: 3px; color: var(--accent); }
 
-.ct__cell--done {
-  background: var(--surface-2);
-  border-color: var(--ok);
-  color: var(--ok);
-}
+.ct__pending { padding: 10px; font-size: 0.84rem; color: var(--muted); text-align: center; }
+.ct__boardNote { margin-top: 10px; font-size: 0.84rem; color: var(--muted); }
 
-.ct__legend {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-top: 16px;
-  padding: 0 20px;
-  font-size: 0.74rem;
-  color: var(--muted);
-}
-.ct__legend b { color: var(--text); margin-right: 4px; }
-
-.ct__next { width: 100%; margin-top: 22px; }
-
-/* ── 칸 상세 ────────────────────────────────────────────── */
+/* ── 사건 상세 ──────────────────────────────────────────── */
 .ct__back {
   position: sticky;
   top: var(--topbar-h);
@@ -131,7 +259,7 @@
   width: 100%;
   padding: 12px 20px;
   text-align: left;
-  font-size: 0.84rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: var(--text);
   background: color-mix(in srgb, var(--bg) 92%, transparent);
@@ -142,17 +270,7 @@
 }
 
 .ct__dhead { padding: 22px 20px 8px; }
-
-.ct__dtitle {
-  font-size: clamp(1.4rem, 6vw, 1.9rem);
-  letter-spacing: -0.03em;
-}
-
-.ct__owner {
-  margin-top: 8px;
-  font-size: 0.78rem;
-  color: var(--muted);
-}
+.ct__owner { margin-top: 8px; font-size: 0.88rem; color: var(--muted); }
 
 .ct__adv {
   margin: 12px 0 4px;
@@ -160,49 +278,65 @@
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: var(--r);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
 }
 .ct__adv summary { cursor: pointer; color: var(--muted); font-weight: 600; }
 .ct__adv p { margin-top: 8px; }
 
 .ct__sec { margin-top: 30px; }
 
-.ct__h2 {
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-  margin-bottom: 10px;
-}
-.ct__h2 em {
-  font-style: normal;
-  font-weight: 400;
-  letter-spacing: 0;
-  margin-left: 4px;
-}
-
-.ct__sub {
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin-bottom: 12px;
-}
-.ct__sub b { color: var(--text); }
-
-/* 증거 카드 */
-.ct__card {
-  margin-bottom: 10px;
-  padding: 14px 16px;
-  background: var(--surface);
+/* ── 자료 다시 보기 ──────────────────────────────────────
+   데이터 탐구와 같은 그래프를 판정 화면 안에 접어 둡니다.
+   그쪽은 화면 하나를 통째로 쓰지만 여기서는 접혔다 펴지는 칸이라,
+   높이 배분의 기준값(--cs-avail)만 낮춰 잡습니다.
+   높이를 직접 덮어쓰면 네 그래프의 비율이 무너집니다. */
+.ct__data {
+  padding: 4px 0 10px;
+  background: var(--surface-2);
   border: 1px solid var(--line);
   border-radius: var(--r);
 }
-.ct__claim { font-weight: 650; margin-bottom: 8px; }
-.ct__cdetail { font-size: 0.9rem; color: var(--muted); }
-.ct__src {
-  margin-top: 10px;
-  font-size: 0.68rem;
-  letter-spacing: 0.04em;
+.ct__data .cs { --cs-avail: 420px; }
+
+.ct__dataSum {
+  padding: 10px 14px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ct__dataSum em {
+  display: block;
+  margin-top: 3px;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 0.86rem;
   color: var(--muted);
+}
+
+.ct__dataMsg { padding: 20px 14px; font-size: 0.95rem; color: var(--muted); }
+
+/* 펼친 그래프의 눈금 읽기줄이 상단 바 아래에 붙게 둡니다.
+   접힌 칸 안에서는 sticky 기준이 달라 그냥 흐르게 두는 편이 덜 어지럽습니다. */
+.ct__data .cs__readout { position: static; }
+
+.ct__stage {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.ct__stage span {
+  padding: 3px 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-radius: 2px;
 }
 
 .ct__claimbox {
@@ -212,45 +346,251 @@
   border-radius: var(--r);
   text-align: center;
 }
+.ct__claimbox p { font-size: 1rem; }
 .ct__claimbox .btn { margin-top: 14px; width: 100%; }
 
-/* ── 판정 ───────────────────────────────────────────────── */
+/* ── 1단계: 가설 하나 ───────────────────────────────────── */
+.ct__hyp {
+  margin-bottom: 16px;
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+
+.ct__hypHead { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.ct__hypHead b { font-size: 1.1rem; letter-spacing: -0.02em; flex: 1; }
+
+.ct__hypMark {
+  flex: none;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 2px;
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.ct__hypMark[data-level='well'] { background: color-mix(in srgb, var(--ok) 22%, var(--surface)); color: var(--ok); }
+.ct__hypMark[data-level='partly'] { background: color-mix(in srgb, var(--era-cenozoic) 24%, var(--surface)); }
+.ct__hypMark[data-level='no'] { background: color-mix(in srgb, var(--danger) 16%, var(--surface)); color: var(--danger); }
+
+.ct__how { margin-bottom: 14px; }
+.ct__how summary { cursor: pointer; font-size: 0.94rem; font-weight: 650; color: var(--accent); }
+.ct__how .ct__chain { margin-top: 12px; }
+
+.ct__card {
+  margin-bottom: 10px;
+  padding: 14px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.ct__claim { font-weight: 650; font-size: 1rem; margin-bottom: 8px; }
+.ct__cdetail { font-size: 0.96rem; line-height: 1.65; color: var(--muted); }
+
+/* ── 증거의 종류 표시 ────────────────────────────────────
+   24가지 sourceType 을 6가지로 묶어 도식과 함께 보여 줍니다. */
+.ct__kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding: 4px 9px 4px 6px;
+  font-size: 0.76rem;
+  font-weight: 650;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+.ct__kind svg { width: 16px; height: 16px; flex: none; }
+
+/* "찾았지만 없음" 은 이 수업에서 가장 중요한 증거라 확실히 구분합니다. */
+.ct__kind[data-kind='absence'] {
+  color: var(--danger);
+  border-color: var(--danger);
+  border-style: dashed;
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+}
+.ct__card:has(.ct__kind[data-kind='absence']) {
+  border-style: dashed;
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--line));
+}
+
+.ct__kind[data-kind='rock'] { color: var(--era-precambrian); }
+.ct__kind[data-kind='fossil'] { color: var(--era-mesozoic); }
+.ct__kind[data-kind='mechanism'] { color: var(--accent); }
+.ct__kind[data-kind='climate'] { color: var(--era-cenozoic); }
+
+/* ── 사건 위치 띠 (누를 수 있음) ─────────────────────────── */
+.ct__stripBox {
+  margin-bottom: 18px;
+  padding: 14px 16px 10px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+}
+
+.ct__stripTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.ct__stripTitle em {
+  display: block;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* 원이 좌우 끝에서 잘리지 않도록 안쪽 여백을 둡니다. */
+.ct__stripTrack {
+  position: relative;
+  height: 40px;
+  margin: 0 18px;
+}
+
+.ct__stripLine {
+  position: absolute;
+  left: -18px;
+  right: -18px;
+  top: 50%;
+  height: 2px;
+  background: var(--line-strong);
+}
+
+.ct__stripDot {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  background: var(--surface);
+  border: 2px solid var(--line-strong);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+.ct__stripDot:hover { transform: translate(-50%, -50%) scale(1.12); }
+.ct__stripDot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 모둠이 맡은 사건은 그 모둠 색으로 */
+.ct__stripDot[data-group] {
+  border-color: var(--g);
+  color: var(--g);
+  background: color-mix(in srgb, var(--g) 12%, var(--surface));
+}
+
+/* 지금 보고 있는 사건 */
+.ct__stripDot.is-on {
+  width: 40px;
+  height: 40px;
+  font-size: 1.05rem;
+  color: #fff;
+  background: var(--g, var(--accent));
+  border-color: var(--g, var(--accent));
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--g, var(--accent)) 22%, transparent);
+}
+
+.ct__stripEnds {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.ct__levels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 16px 0 12px;
+}
+.ct__level { position: relative; display: block; }
+.ct__level input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ct__level span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 50px;
+  padding: 4px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: var(--surface-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  cursor: pointer;
+}
+.ct__level input:checked + span {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.ct__level input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ct__level input:disabled + span { opacity: 0.5; cursor: not-allowed; }
+
+/* ── 2단계: 하나 고르기 ─────────────────────────────────── */
+.ct__choose {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.ct__choose.is-locked { opacity: 0.45; }
+
+.ct__pick { position: relative; display: block; }
+.ct__pick input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ct__pick span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  font-size: 0.98rem;
+  font-weight: 650;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  cursor: pointer;
+}
+.ct__pick input:checked + span {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+.ct__pick input:disabled + span { cursor: not-allowed; }
+
+/* ── 기준 판정 ──────────────────────────────────────────── */
 .ct__crit {
   margin-bottom: 26px;
   padding-bottom: 22px;
   border-bottom: 1px solid var(--line);
 }
-.ct__crit:last-child { border-bottom: 0; }
+.ct__crit:last-of-type { border-bottom: 0; }
 
-.ct__critLabel { font-size: 1rem; margin-bottom: 6px; }
+.ct__critLabel { font-size: 1.05rem; margin-bottom: 6px; }
+.ct__tip { font-size: 0.9rem; line-height: 1.55; color: var(--muted); margin-bottom: 14px; }
 
-.ct__tip {
-  font-size: 0.82rem;
-  color: var(--muted);
-  margin-bottom: 14px;
-}
-
-.ct__scale {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.ct__scale input[type='range'] {
-  flex: 1;
-  height: 32px;
-  accent-color: var(--accent);
-}
+.ct__scale { display: flex; align-items: center; gap: 12px; }
+.ct__scale input[type='range'] { flex: 1; height: 32px; accent-color: var(--accent); }
 .ct__scale output {
   min-width: 2.6em;
   text-align: center;
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 700;
 }
-
 .ct__scaleEnds {
   display: flex;
   justify-content: space-between;
-  font-size: 0.68rem;
+  font-size: 0.76rem;
   color: var(--muted);
   padding-right: 3.4em;
 }
@@ -260,7 +600,7 @@
   align-items: center;
   gap: 8px;
   margin: 12px 0;
-  font-size: 0.84rem;
+  font-size: 0.92rem;
   cursor: pointer;
 }
 .ct__hold input { width: 18px; height: 18px; accent-color: var(--accent); }
@@ -271,14 +611,14 @@
   background: var(--surface);
   border: 1px solid var(--line-strong);
   border-radius: var(--r);
+  font-size: 1rem;
+  line-height: 1.55;
   resize: vertical;
-  line-height: 1.5;
 }
 .ct__reason:disabled { background: var(--surface-2); color: var(--muted); }
 
-/* ── 반론 ───────────────────────────────────────────────── */
+/* ── 반론 · 제출 ────────────────────────────────────────── */
 .ct__rebuttals { margin-top: 14px; }
-
 .ct__rebut {
   margin-bottom: 10px;
   padding: 14px 16px;
@@ -287,50 +627,69 @@
   border-left: 3px solid var(--c-gmst, #c0563e);
   border-radius: var(--r);
 }
-.ct__rebut b { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 6px; }
-.ct__rebut p { font-size: 0.92rem; }
+.ct__rebut b { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+.ct__rebut p { font-size: 0.98rem; line-height: 1.65; }
+
+.ct__counterHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 20px 0 8px;
+}
 
 .ct__counterLabel {
   display: block;
-  margin: 20px 0 8px;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.06em;
   color: var(--muted);
 }
 
-/* ── 제출 ───────────────────────────────────────────────── */
-.ct__submit { margin-top: 34px; }
-.ct__submit .btn { width: 100%; }
+.ct__toData {
+  flex: none;
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  cursor: pointer;
+}
+.ct__toData:hover { background: var(--surface-2); }
 
 .ct__radarWrap {
-  height: 260px;
-  margin-bottom: 20px;
+  height: 270px;
+  margin: 24px 0 18px;
   padding: 12px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r);
 }
 
-.ct__msg {
-  min-height: 1.5em;
-  margin-top: 12px;
-  font-size: 0.84rem;
-  color: var(--c-gmst, #c0563e);
-}
+.ct__submitBtn { width: 100%; margin-top: 18px; }
+
+.ct__msg { min-height: 1.5em; margin-top: 14px; font-size: 0.92rem; color: var(--c-gmst, #c0563e); }
 
 .ct__warn {
   margin-top: 16px;
   padding: 12px 14px;
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-left: 3px solid var(--danger);
   border-radius: var(--r);
 }
 
+.ct__next { width: 100%; margin-top: 22px; }
+
+@media (min-width: 640px) {
+  .ct__mechs { grid-template-columns: 1fr 1fr; }
+  .ct__choose { grid-template-columns: repeat(4, 1fr); }
+}
+
 @media (min-width: 720px) {
   .ct__matrix { min-width: 0; }
-  .ct__matrix th[scope='row'] { width: 120px; }
-  .ct__cell { min-height: 64px; font-size: 0.78rem; }
+  .ct__matrix th[scope='row'] { width: 130px; }
 }

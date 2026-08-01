@@ -1,6 +1,6 @@
 import { signInAnonymously, onAuthStateChanged } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db, configured, SESSION_ID } from '../firebase.js';
+import { auth, db, configured, getSessionId } from '../firebase.js';
 import * as store from '../store.js';
 
 /* 익명 로그인.
@@ -32,7 +32,7 @@ export async function joinClass({ studentId, name, groupId }) {
   // sessions/{세션}/students/{uid} — 교사 대시보드가 명단으로 씁니다.
   // merge: true 라서 같은 학생이 다시 들어와도 덮어쓰기만 되고 중복이 안 생깁니다.
   await setDoc(
-    doc(db, 'sessions', SESSION_ID, 'students', uid),
+    doc(db, 'sessions', getSessionId(), 'students', uid),
     {
       uid,
       studentId,

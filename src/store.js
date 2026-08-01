@@ -20,7 +20,8 @@ const state = {
 
   // 이후 단계에서 Firestore 실시간 구독으로 채워질 칸들
   marks: { mine: [], classCounts: {} },
-  claims: { locks: {}, byCell: {} },
+  // 원인 찾기 — locks: 사건별 점유 모둠, byEvent: 사건별 판정
+  verdicts: { locks: {}, byEvent: {} },
 
   // 선개념 확인 — all: 반 전체 응답, pre/post: 내 응답
   preconceptions: { all: [], pre: null, post: null },

@@ -1,7 +1,8 @@
 import * as store from '../store.js';
 import { go } from '../router.js';
 import { joinClass, authErrorMessage } from '../services/auth.js';
-import { configured } from '../firebase.js';
+import { configured, setSessionKey, getSessionKey } from '../firebase.js';
+import { GROUPS } from '../data/groups.js';
 
 /* 홈 — 학번·이름·모둠번호를 받고 익명 로그인까지 마칩니다.
  *
@@ -9,10 +10,11 @@ import { configured } from '../firebase.js';
  * 보안 규칙이 그 uid 를 검사해 "남의 데이터는 건드릴 수 없다"를 보장합니다.
  */
 
-const GROUPS = [1, 2, 3, 4, 5, 6];
+const CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
 export default function home(outlet) {
   const u = store.get('user');
+  const savedClass = getSessionKey();   // 주소의 ?s= 나 지난 접속에서 정해진 반
 
   outlet.innerHTML = `
     <div class="wrap home">
@@ -23,6 +25,17 @@ export default function home(outlet) {
       </div>
 
       <form id="join" novalidate>
+        <label class="field">
+          <span class="field__label">반</span>
+          <select class="field__input" id="f-class">
+            <option value="">고르세요</option>
+            ${CLASSES.map(
+              (c) =>
+                `<option value="${c}반" ${savedClass === `${c}반` ? 'selected' : ''}>${c}반</option>`
+            ).join('')}
+          </select>
+        </label>
+
         <label class="field">
           <span class="field__label">학번</span>
           <input class="field__input" id="f-sid" inputmode="numeric"
@@ -72,10 +85,12 @@ export default function home(outlet) {
   async function onSubmit(e) {
     e.preventDefault();
 
+    const klass = outlet.querySelector('#f-class').value;
     const studentId = outlet.querySelector('#f-sid').value.trim();
     const name = outlet.querySelector('#f-name').value.trim();
     const picked = outlet.querySelector('input[name="grp"]:checked');
 
+    if (!klass) return fail('반을 골라 주세요.');
     if (!studentId) return fail('학번을 입력해 주세요.');
     if (!/^\d{4,6}$/.test(studentId)) return fail('학번은 숫자 4~6자리로 입력해 주세요.');
     if (!name) return fail('이름을 입력해 주세요.');
@@ -86,6 +101,10 @@ export default function home(outlet) {
     setBusy(true);
 
     try {
+      /* 반을 먼저 확정해야 합니다. 이후의 모든 읽기·쓰기가
+         sessions/{반}/... 아래로 가기 때문에 로그인보다 앞서야 합니다. */
+      setSessionKey(klass);
+
       // 익명 로그인 + sessions/{세션}/students/{uid} 등록
       await joinClass({ studentId, name, groupId: Number(picked.value) });
       // 타임라인이 아니라 선개념 확인으로 갑니다. 수업 전 상태를 먼저 남깁니다.

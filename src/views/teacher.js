@@ -6,7 +6,8 @@ import {
   clusterAnswers,
 } from '../services/teacher.js';
 import { loadQuiz } from '../services/quiz.js';
-import { configured } from '../firebase.js';
+import { configured, setSessionKey, getSessionKey } from '../firebase.js';
+import { GROUPS } from '../data/groups.js';
 
 /* 교사 대시보드 — 읽기 전용.
  *
@@ -29,6 +30,35 @@ export default async function teacher(outlet) {
   let clustering = false;
   let data = { students: [], claims: [], answers: [] };
 
+  const CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `${n}반`);
+
+  /* 반을 바꾸면 구독을 끊고 새 반으로 다시 붙입니다.
+     세션이 곧 반이라 이 한 번으로 명단·판정·답안이 모두 그 반 것으로 바뀝니다. */
+  function switchClass(key) {
+    setSessionKey(key);
+    data = { students: [], claims: [], answers: [] };
+    clusters = null;
+    unsubData?.();
+    unsubData = subscribeDashboard(onData, onDataError);
+    renderDashboard();
+  }
+
+  function onData(d) {
+    data = d;
+    renderDashboard();
+  }
+
+  function onDataError(e, name) {
+    if (e.code === 'permission-denied') {
+      renderLogin(
+        '이 계정에는 열람 권한이 없습니다. Firestore 최상위에 teachers 컬렉션을 만들고, ' +
+          '이 계정의 uid 를 문서 이름으로 하는 문서를 추가해 주세요.'
+      );
+    } else {
+      console.error(name, e);
+    }
+  }
+
   outlet.innerHTML = '<div class="tc" id="tc-root"></div>';
   const root = outlet.querySelector('#tc-root');
 
@@ -43,22 +73,7 @@ export default async function teacher(outlet) {
     }
 
     renderDashboard();
-    unsubData = subscribeDashboard(
-      (d) => {
-        data = d;
-        renderDashboard();
-      },
-      (e, name) => {
-        if (e.code === 'permission-denied') {
-          renderLogin(
-            `이 계정에는 열람 권한이 없습니다. Firestore 의 sessions/${'{세션}'}/teachers 아래에 ` +
-              '이 계정의 uid 로 문서를 만들어 주세요.'
-          );
-        } else {
-          console.error(name, e);
-        }
-      }
-    );
+    unsubData = subscribeDashboard(onData, onDataError);
   });
 
   /* ── 로그인 ─────────────────────────────────────────── */
@@ -132,6 +147,15 @@ export default async function teacher(outlet) {
           <button class="btn btn--ghost tc__out" id="tc-out" type="button">로그아웃</button>
         </div>
 
+        <label class="tc__pick">
+          <span>보고 있는 반</span>
+          <select id="tc-class">
+            ${CLASSES.map(
+              (c) => `<option value="${c}" ${getSessionKey() === c ? 'selected' : ''}>${c}</option>`
+            ).join('')}
+          </select>
+        </label>
+
         <div class="tc__stats">
           ${stat('접속 학생', students.length)}
           ${stat('제출된 판정', `${submittedClaims.length} / 20`)}
@@ -184,6 +208,7 @@ export default async function teacher(outlet) {
     `;
 
     root.querySelector('#tc-out').addEventListener('click', () => teacherSignOut());
+    root.querySelector('#tc-class').addEventListener('change', (e) => switchClass(e.target.value));
 
     root.querySelector('#tc-cluster')?.addEventListener('click', async () => {
       clustering = true;
@@ -222,7 +247,7 @@ export default async function teacher(outlet) {
   }
 
   function groupTable(claims) {
-    const groups = [1, 2, 3, 4, 5, 6];
+    const groups = GROUPS;
     return `
       <div class="tc__groups">
         ${groups
@@ -289,7 +314,7 @@ function stat(label, value) {
 }
 
 function sectionName(s) {
-  return { timeline: '타임라인', explore: '데이터 탐구', court: '가설 법정' }[s] || s;
+  return { timeline: '타임라인', explore: '데이터 탐구', court: '원인 판정' }[s] || s;
 }
 
 function esc(s) {

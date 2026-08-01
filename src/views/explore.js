@@ -32,9 +32,9 @@ export default async function explore(outlet) {
         </p>
       </header>
 
-      <div id="ex-stack"></div>
-
-      <div class="ex__task wrap">
+      <!-- 활동 안내는 그래프보다 위에 둡니다. 무엇을 해야 하는지 모른 채
+           그래프를 만지다가 아래까지 내려가야 안내를 만나면 안 됩니다. -->
+      <div class="ex__brief wrap">
         <div class="ex__counter">
           <span>곡선에서 <b>크게 줄어든 것처럼 보이는 구간</b> ${MAX_MARKS}곳을 탭해 표시하세요.</span>
           <b class="ex__count mono" id="ex-count">0 / ${MAX_MARKS}</b>
@@ -44,7 +44,11 @@ export default async function explore(outlet) {
           <span><i class="ex__sw ex__sw--mine"></i> 내 표시</span>
           <span><i class="ex__sw ex__sw--class"></i> 학급 전체 (진할수록 많이 선택된 구간)</span>
         </div>
+      </div>
 
+      <div id="ex-stack"></div>
+
+      <div class="ex__task wrap">
         <p class="ex__msg" id="ex-msg" role="status"></p>
 
         <div class="ex__actions">
@@ -61,13 +65,44 @@ export default async function explore(outlet) {
             <li>대멸종이 아닌데 크게 줄어 보인 곳은 화석 기록 수가 몇 개였나요?
                 양옆 구간과 비교해 보세요.</li>
           </ol>
-          <p class="ex__reflectNote">
-            화석 기록이 적으면 다양성이 낮게 나옵니다. 그런데 <b>대멸종이 일어나도 화석 기록은 줄어듭니다.</b>
-            실제로 대멸종 1이 일어난 구간은 화석 기록 수가 이 데이터 전체에서 가장 적은 축에 듭니다.
-            그래서 이 그래프만으로는 "조사가 덜 된 것"과 "정말 생물이 사라진 것"을 가릴 수 없습니다.
-            암석과 지층에서 나온 다른 증거가 필요합니다 — 다음 활동인 <b>가설 법정</b>이 그 일을 합니다.
-          </p>
-          <a class="btn ex__next" href="#/court">다음 — 가설 법정</a>
+          <details class="ex__hint">
+            <summary>대멸종 2 구간은 오히려 올라가 보이는데요?</summary>
+            <p>
+              맞습니다. 회색 띠(3억 7,200만 ~ 3억 5,900만 년 전) 안에 들어가는 자료 구간은
+              딱 하나뿐이고, 그 값은 앞 구간보다 오히려 높습니다.
+            </p>
+            <p>
+              큰 감소는 띠가 <b>시작되기 직전</b> 구간에서 일어났고(속 610 → 424),
+              마지막 감소는 띠가 <b>끝난 직후</b> 구간에서 나타납니다(459 → 412).
+              사건이 구간의 경계에서 일어나면 그 영향이 양옆으로 나뉘어 희석됩니다.
+              게다가 이 부근은 자료 구간 하나가 1,000만 년을 넘습니다 — 눈금이 사건보다 굵습니다.
+            </p>
+            <p>
+              대멸종 2가 아니라는 뜻이 아닙니다. 데본기 후기의 위기는 한 번의 사건이 아니라
+              <b>수백만 년에 걸친 여러 차례의 위기</b>였고, 그래서 뾰족한 골로 나타나지 않습니다.
+            </p>
+          </details>
+
+          <div class="ex__reflectNote">
+            <p>화석 기록이 적어지는 이유는 두 가지입니다.</p>
+            <ol class="ex__why">
+              <li><b>그 시대의 암석이 적게 남아 조사가 덜 되었다</b></li>
+              <li><b>정말로 생물이 크게 줄었다</b></li>
+            </ol>
+            <table class="ex__cmp">
+              <thead><tr><th>구간</th><th>속 수</th><th>화석 기록</th><th>이웃 평균</th></tr></thead>
+              <tbody>
+                <tr><td>약 8,800만 년 전</td><td>318</td><td>3,389</td><td>12,876</td></tr>
+                <tr><td>대멸종 1 (약 4억 4,400만 년 전)</td><td>295</td><td>3,798</td><td>18,563</td></tr>
+              </tbody>
+            </table>
+            <p>
+              두 구간은 그래프에서 <b>거의 같은 모양</b>입니다. 그런데 앞은 ①이고 뒤는 ②입니다.
+              어느 쪽인지는 이 그래프만으로 가릴 수 없습니다. 암석과 지층에서 나온 다른 증거가
+              필요합니다 — 다음 활동인 <b>원인 판정</b>이 그 일을 합니다.
+            </p>
+          </div>
+          <a class="btn ex__next" href="#/court">다음 — 원인 판정</a>
         </div>
 
         ${

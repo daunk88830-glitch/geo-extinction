@@ -1,5 +1,5 @@
 import { doc, collection, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db, configured, SESSION_ID } from '../firebase.js';
+import { db, configured, getSessionId } from '../firebase.js';
 import * as store from '../store.js';
 
 /* 형성평가 문항 불러오기 + 답안 저장.
@@ -87,7 +87,7 @@ export async function saveAnswer(item, payload) {
 
   try {
     await setDoc(
-      doc(collection(db, 'sessions', SESSION_ID, 'quizAnswers'), `${u.uid}_${item.id}`),
+      doc(collection(db, 'sessions', getSessionId(), 'quizAnswers'), `${u.uid}_${item.id}`),
       {
         uid: u.uid,
         groupId: u.groupId,
@@ -111,6 +111,6 @@ export async function saveAnswer(item, payload) {
 export function sectionLink(section) {
   if (section === 'timeline') return { href: '#/timeline', label: '타임라인 다시 보기' };
   if (section === 'explore') return { href: '#/explore', label: '데이터 탐구 다시 보기' };
-  if (section === 'court') return { href: '#/court', label: '가설 법정 다시 보기' };
+  if (section === 'court') return { href: '#/court', label: '원인 판정 다시 보기' };
   return null;
 }

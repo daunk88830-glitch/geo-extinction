@@ -22,8 +22,8 @@
 .ex__head { padding: 28px 20px 20px; }
 
 .ex__eyebrow {
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
   color: var(--muted);
   margin-bottom: 8px;
 }
@@ -36,14 +36,29 @@
 
 .ex__lead {
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
 }
 .ex__lead b { color: var(--text); }
+
+/* ── 활동 안내 (그래프 위) ───────────────────────────────── */
+.ex__brief {
+  margin-top: 18px;
+  padding: 16px 20px;
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
 
 /* ── 차트 묶음 ───────────────────────────────────────────── */
 .cs {
   position: relative;
   padding: 0 4px;
+
+  /* 세 그래프가 한 화면에 함께 들어오도록 남는 세로 공간을 나눠 씁니다.
+     빼는 값은 상단 바 + 고정 표시줄 + 그래프 제목 3개 + 축 안내 + 여백입니다.
+     기기 높이가 달라도 비율이 유지됩니다. */
+  --cs-avail: calc(100dvh - 250px);
 }
 
 .cs__readout {
@@ -63,23 +78,23 @@
 }
 
 .cs__ma {
-  font-size: 0.95rem;
+  font-size: 1.05rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .cs__vals {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 .cs__vals b { color: var(--text); font-weight: 650; }
 
-.cs__panel { margin-top: 10px; }
+.cs__panel { margin-top: 8px; }
 
 .cs__title {
   padding-left: 16px;
-  font-size: 0.8rem;
+  font-size: 0.92rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
@@ -87,7 +102,7 @@
   font-style: normal;
   font-weight: 400;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   margin-left: 6px;
 }
 
@@ -96,10 +111,17 @@
    가로 방향 손가락 움직임만 우리가 받습니다. */
 .cs__canvas {
   position: relative;
-  height: 150px;
+  height: clamp(96px, calc(var(--cs-avail) * 0.30), 210px);
   touch-action: pan-y;
 }
-.cs__panel[data-key='div'] .cs__canvas { height: 190px; }
+/* 다양성 곡선이 활동의 중심이라 조금 더 크게 잡습니다. */
+.cs__panel[data-key='div'] .cs__canvas {
+  height: clamp(126px, calc(var(--cs-avail) * 0.40), 280px);
+}
+/* 화석 기록 수는 보조 그래프라 켜져도 자리를 적게 씁니다. */
+.cs__panel[data-key='occ'] .cs__canvas {
+  height: clamp(80px, calc(var(--cs-avail) * 0.24), 150px);
+}
 
 .cs__canvas canvas { display: block; }
 
@@ -116,23 +138,23 @@
 }
 
 .cs__axis {
-  margin: 10px 0 0;
+  margin: 8px 0 0;
   padding-left: 16px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   color: var(--muted);
   letter-spacing: 0.04em;
 }
 
 .cs__gap {
-  margin: 6px 0 0;
+  margin: 5px 0 0;
   padding: 0 16px;
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   color: var(--muted);
 }
 
 /* ── 과제 영역 ───────────────────────────────────────────── */
 .ex__task {
-  margin-top: 28px;
+  margin-top: 20px;
   padding: 20px;
   background: var(--surface);
   border-top: 1px solid var(--line);
@@ -144,10 +166,11 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  font-size: 0.92rem;
+  font-size: 1.02rem;
+  line-height: 1.5;
 }
 .ex__count {
-  font-size: 1.05rem;
+  font-size: 1.15rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -157,8 +180,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 6px 16px;
-  margin-top: 14px;
-  font-size: 0.76rem;
+  margin-top: 12px;
+  font-size: 0.86rem;
   color: var(--muted);
 }
 .ex__legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -169,7 +192,7 @@
   height: 10px;
   border-radius: 1px;
 }
-.ex__sw--mine { background: var(--text); height: 3px; }
+.ex__sw--mine { background: var(--text); height: 6px; }
 .ex__sw--class {
   background: linear-gradient(
     to right,
@@ -181,7 +204,7 @@
 .ex__msg {
   min-height: 1.5em;
   margin-top: 12px;
-  font-size: 0.84rem;
+  font-size: 0.92rem;
   color: var(--c-gmst);
 }
 
@@ -203,25 +226,75 @@
 }
 
 .ex__reflectTitle {
-  font-size: 0.95rem;
+  font-size: 1.08rem;
   margin-bottom: 12px;
 }
 
 .ex__questions {
   margin: 0;
   padding-left: 1.2em;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 .ex__questions li { margin-bottom: 8px; }
+
+/* 곡선에 안 드러나는 사건에 대한 보충 설명 — 먼저 생각하게 하려고 접어 둡니다. */
+.ex__hint {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.ex__hint summary {
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 650;
+  color: var(--accent);
+}
+.ex__hint p {
+  margin-top: 10px;
+  font-size: 0.93rem;
+  line-height: 1.65;
+  color: var(--muted);
+}
+.ex__hint b { color: var(--text); }
 
 .ex__reflectNote {
   margin-top: 16px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+  line-height: 1.65;
   color: var(--muted);
 }
 .ex__reflectNote b { color: var(--text); }
+.ex__reflectNote p + p { margin-top: 10px; }
+
+.ex__why {
+  margin: 10px 0;
+  padding-left: 1.4em;
+}
+.ex__why li { margin-bottom: 4px; }
+
+/* 두 구간 비교표 — 그래프에서 거의 같아 보인다는 것이 요점입니다. */
+.ex__cmp {
+  width: 100%;
+  margin: 14px 0;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+.ex__cmp th,
+.ex__cmp td {
+  padding: 7px 6px;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+}
+.ex__cmp th:first-child,
+.ex__cmp td:first-child { text-align: left; }
+.ex__cmp th { font-size: 0.78rem; color: var(--muted); font-weight: 650; }
+.ex__cmp td { color: var(--text); }
 
 .ex__next {
   width: 100%;
@@ -231,14 +304,15 @@
 .ex__warn {
   margin-top: 14px;
   padding: 12px 14px;
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   background: var(--surface-2);
   border: 1px solid var(--line);
   border-left: 3px solid var(--danger);
   border-radius: var(--r);
 }
 
+/* 넓은 화면에서는 위아래 여유가 있으니 화면 높이 배분만 조금 키웁니다.
+   높이를 고정값으로 덮어쓰면 "세 그래프가 한 화면에" 가 다시 깨집니다. */
 @media (min-width: 720px) {
-  .cs__canvas { height: 180px; }
-  .cs__panel[data-key='div'] .cs__canvas { height: 240px; }
+  .cs { --cs-avail: calc(100dvh - 230px); }
 }

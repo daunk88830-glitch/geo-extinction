@@ -1,5 +1,5 @@
 import { collection, doc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
-import { db, configured, SESSION_ID } from '../firebase.js';
+import { db, configured, getSessionId } from '../firebase.js';
 import * as store from '../store.js';
 
 /* 선개념 확인 응답 저장과 반 전체 분포 구독.
@@ -15,7 +15,7 @@ import * as store from '../store.js';
  * 남의 응답을 못 건드리게 합니다.
  */
 
-const colRef = () => collection(db, 'sessions', SESSION_ID, 'preconceptions');
+const colRef = () => collection(db, 'sessions', getSessionId(), 'preconceptions');
 
 export async function saveResponses(phase, answers) {
   const u = store.get('user');

@@ -8,9 +8,12 @@
     "data": "node scripts/build-data.mjs",
     "build": "vite build",
     "preview": "vite preview",
-    "images": "node scripts/build-images.mjs"
+    "images": "node scripts/build-images.mjs",
+    "rules": "firebase deploy --only firestore:rules",
+    "rules:login": "firebase login"
   },
   "devDependencies": {
+    "firebase-tools": "^15.25.1",
     "jimp": "^1.6.1",
     "vite": "^8.2.0"
   },

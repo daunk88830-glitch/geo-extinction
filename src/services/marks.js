@@ -6,7 +6,7 @@ import {
   onSnapshot,
   serverTimestamp,
 } from 'firebase/firestore';
-import { db, configured, SESSION_ID } from '../firebase.js';
+import { db, configured, getSessionId } from '../firebase.js';
 import * as store from '../store.js';
 
 /* 다양성 곡선 위의 "급감 구간" 표시.
@@ -27,7 +27,7 @@ import * as store from '../store.js';
 
 export const MAX_MARKS = 5;
 
-const colRef = () => collection(db, 'sessions', SESSION_ID, 'marks');
+const colRef = () => collection(db, 'sessions', getSessionId(), 'marks');
 const docId = (uid, binId) => `${uid}_${binId}`;
 
 /** 표시를 켜고 끕니다. 결과 문자열로 UI 가 안내 문구를 정합니다. */

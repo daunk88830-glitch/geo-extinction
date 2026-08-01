@@ -1,6 +1,6 @@
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, onSnapshot } from 'firebase/firestore';
-import { auth, db, configured, SESSION_ID } from '../firebase.js';
+import { auth, db, configured, getSessionId } from '../firebase.js';
 
 /* 교사 대시보드용 인증과 구독.
  *
@@ -42,7 +42,7 @@ export function subscribeDashboard(onData, onError) {
 
   const sub = (name, key, map) =>
     onSnapshot(
-      collection(db, 'sessions', SESSION_ID, name),
+      collection(db, 'sessions', getSessionId(), name),
       (snap) => {
         state[key] = snap.docs.map(map);
         emit();
@@ -55,7 +55,7 @@ export function subscribeDashboard(onData, onError) {
 
   const offs = [
     sub('students', 'students', (d) => d.data()),
-    sub('claims', 'claims', (d) => d.data()),
+    sub('verdicts', 'claims', (d) => d.data()),
     sub('quizAnswers', 'answers', (d) => ({ docId: d.id, ...d.data() })),
   ];
 

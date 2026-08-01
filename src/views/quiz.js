@@ -40,7 +40,7 @@ export default async function quiz(outlet) {
         <section class="qz__item" id="qz-post"></section>
 
         <p class="qz__msg" id="qz-msg" role="status"></p>
-        <a class="btn btn--ghost qz__done" href="#/court">가설 법정으로 돌아가기</a>
+        <a class="btn btn--ghost qz__done" href="#/court">원인 판정으로 돌아가기</a>
       </div>
     </div>
   `;

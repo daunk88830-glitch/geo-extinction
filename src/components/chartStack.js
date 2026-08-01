@@ -29,7 +29,9 @@ Chart.register(LineController, LineElement, PointElement, LinearScale, Logarithm
 const X_MIN = 0;
 const X_MAX = 540;        // 현생누대 전체 (다양성 데이터 범위에 맞춤)
 const Y_AXIS_W = 48;      // 세 차트 공통 y축 폭 — 이 값이 정렬의 핵심입니다
-const HEAT_H = 18;        // 다양성 차트 아래에 비워 둘 히트맵 띠 높이(px)
+const HEAT_H = 24;        // 다양성 차트 아래에 비워 둘 히트맵 띠 높이(px)
+const MARK_W = 6;         // 표시 하나의 최소 가로 폭(px). 자료 구간이 98개라
+                          // 그냥 두면 막대가 5px 남짓이라 교실 뒤에서 안 보입니다.
 
 const css = (name, fallback = '#888') =>
   getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
@@ -60,24 +62,31 @@ const heatmapPlugin = {
 
     ctx.save();
 
+    // 구간이 좁아도 최소 폭은 확보하고, 가운데를 기준으로 넓힙니다.
+    const span = (b) => {
+      const l = scales.x.getPixelForValue(b.maxMa);
+      const r = scales.x.getPixelForValue(b.minMa);
+      const w = Math.max(r - l, MARK_W);
+      return [l - (w - (r - l)) / 2, w];
+    };
+
     // 학급 전체 탭 누적 — 진할수록 많이 찍힌 구간
     const heat = css('--c-heat', '#b2483c');
     for (const b of bins) {
       const n = counts[b.id];
       if (!n) continue;
-      const left = scales.x.getPixelForValue(b.maxMa);
-      const right = scales.x.getPixelForValue(b.minMa);
+      const [x, w] = span(b);
       ctx.fillStyle = alpha(heat, 0.18 + 0.72 * (n / max));
-      ctx.fillRect(left, stripTop, Math.max(right - left, 2), 10);
+      ctx.fillRect(x, stripTop, w, 10);
     }
 
-    // 내가 찍은 구간 — 학급 누적과 구분되도록 그 아래 굵은 밑줄
+    // 내가 찍은 구간 — 학급 누적과 구분되도록 그 아래 굵은 밑줄.
+    // 교실 뒤에서도 보이도록 학급 막대보다 두껍게 잡습니다.
     ctx.fillStyle = css('--text', '#000');
     for (const b of bins) {
       if (!mine.has(b.id)) continue;
-      const left = scales.x.getPixelForValue(b.maxMa);
-      const right = scales.x.getPixelForValue(b.minMa);
-      ctx.fillRect(left, stripTop + 12, Math.max(right - left, 2), 3);
+      const [x, w] = span(b);
+      ctx.fillRect(x, stripTop + 13, w, 6);
     }
 
     ctx.restore();

@@ -2,17 +2,19 @@ rules_version = '2';
 
 /* Firestore 보안 규칙.
  *
- * Firebase 콘솔 → Firestore Database → 규칙 탭에 이 파일 내용을 통째로
- * 붙여넣고 [게시] 를 누르세요.
+ * 이 파일을 고친 뒤에는 반드시 서버에 올려야 반영됩니다.
+ *
+ *     npm run rules
+ *
+ * (처음 한 번만: npm run rules:login 으로 구글 로그인)
+ * 콘솔에 손으로 붙여넣을 필요는 없습니다.
  *
  * 핵심 원칙
  *  1. 로그인(익명이라도)하지 않으면 아무것도 못 한다.
  *  2. 문서 이름 앞부분이 내 uid 인 문서만 쓸 수 있다 → 남의 데이터 조작 불가.
- *  3. 칸 점유(cellLocks)는 create 만 허용 → 먼저 만든 모둠이 이긴다.
- *  4. 판정(claims)은 그 칸을 점유한 모둠만 쓸 수 있다.
- *
- * Day 1 에서 실제로 쓰이는 것은 students 뿐입니다.
- * 나머지는 Day 2~3 에서 쓰지만 규칙은 지금 한 번에 올려둡니다.
+ *  3. 사건 점유(eventLocks)는 create 만 허용 → 먼저 누른 모둠이 이긴다.
+ *  4. 판정(verdicts)은 그 사건을 점유한 모둠만 쓸 수 있다.
+ *  5. 반(세션)이 다르면 자료가 섞이지 않는다 — 모든 것이 sessions/{반} 아래 있다.
  */
 
 service cloud.firestore {
@@ -34,16 +36,20 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/sessions/$(sid)/students/$(uid())).data.groupId;
     }
 
-    /* 교사인지. sessions/{세션}/teachers/{uid} 문서가 있으면 교사입니다.
+    /* 교사인지. 최상위 teachers/{uid} 문서가 있으면 교사입니다.
        이 문서는 Firebase 콘솔에서 손으로 만듭니다(아래 teachers 규칙이 쓰기를 막습니다).
-       서비스 계정 키를 외부에 두지 않고 교사 권한을 주기 위한 장치입니다. */
-    function isTeacher(sid) {
-      return exists(/databases/$(database)/documents/sessions/$(sid)/teachers/$(uid()));
+       서비스 계정 키를 외부에 두지 않고 교사 권한을 주기 위한 장치입니다.
+
+       세션(반) 안이 아니라 최상위에 두는 이유: 반이 9개인데 세션마다
+       교사 문서를 만들면 9번 등록해야 합니다. 교사는 반과 무관하게
+       교사이므로 문서 하나로 모든 반을 봅니다. */
+    function isTeacher() {
+      return exists(/databases/$(database)/documents/teachers/$(uid()));
     }
 
-    function lockedByMyGroup(sid, cellId) {
-      return exists(/databases/$(database)/documents/sessions/$(sid)/cellLocks/$(cellId))
-        && get(/databases/$(database)/documents/sessions/$(sid)/cellLocks/$(cellId)).data.groupId
+    function lockedByMyGroup(sid, eventId) {
+      return exists(/databases/$(database)/documents/sessions/$(sid)/eventLocks/$(eventId))
+        && get(/databases/$(database)/documents/sessions/$(sid)/eventLocks/$(eventId)).data.groupId
            == myGroup(sid);
     }
 
@@ -64,7 +70,12 @@ service cloud.firestore {
           && request.resource.data.studentId.size() <= 10
           && request.resource.data.groupId is int
           && request.resource.data.groupId >= 1
-          && request.resource.data.groupId <= 6;
+          /* 실제 모둠 수는 src/data/groups.js 가 정합니다(지금은 5).
+             여기는 말도 안 되는 값만 막는 느슨한 상한입니다 — 딱 맞게 조이면
+             나중에 모둠 수를 늘렸을 때 규칙을 같이 안 고쳐서 학생이
+             "저장 권한이 없습니다"로 수업 시작부터 막히게 됩니다.
+             모둠 번호는 보안 경계가 아닙니다(학생이 아무 번호나 고를 수 있음). */
+          && request.resource.data.groupId <= 9;
         allow delete: if false;
       }
 
@@ -83,30 +94,40 @@ service cloud.firestore {
         allow update: if false;           // 수정 대신 지우고 다시 만듭니다
       }
 
-      /* 가설 법정 칸 점유. create 만 허용하는 것이 곧 잠금장치입니다.
-         두 모둠이 같은 순간에 같은 칸을 눌러도 Firestore 가 하나만 성공시키고
-         나머지는 already-exists 오류를 돌려줍니다. 트랜잭션이 필요 없습니다. */
-      match /cellLocks/{cellId} {
+      /* 사건(대멸종 1~5) 점유. 한 모둠이 사건 하나를 통째로 맡습니다.
+         create 만 허용하는 것이 곧 잠금장치입니다 — 두 모둠이 같은 순간에
+         같은 사건을 눌러도 Firestore 가 하나만 성공시킵니다.
+         사건이 5개뿐이라 수업 시작 직후 경쟁이 가장 치열한 지점입니다. */
+      match /eventLocks/{eventId} {
         allow read: if signedIn();
         allow create: if signedIn()
           && request.resource.data.uid == uid()
           && request.resource.data.groupId == myGroup(sid);
-        allow update, delete: if false;   // 점유 해제는 교사만 (서버 경유)
+        allow update, delete: if false;   // 점유 해제는 교사만 (콘솔)
       }
 
-      /* 판정 결과. 열람은 전체 공개, 쓰기는 점유한 모둠만.
-         한 모둠 안에서 5~6명이 동시에 편집하므로 앱은 항상 merge 로 씁니다.
-         서로 다른 기준을 만지면 충돌 없이 둘 다 남습니다.
-         (같은 기준의 서술을 동시에 고치는 경우는 화면 실시간 반영으로 피합니다.) */
-      match /claims/{cellId} {
+      /* 판정 결과. 열람은 전체 공개, 쓰기는 그 사건을 점유한 모둠만.
+         한 모둠 안에서 여러 명이 동시에 편집하므로 앱은 항상 merge 로 씁니다.
+         가설별·기준별로 필드가 나뉘어 있어 서로 다른 곳을 만지면 충돌이 없습니다. */
+      match /verdicts/{eventId} {
         allow read: if signedIn();
+
+        /* 앱은 항상 바뀐 부분만 merge 로 보냅니다. 예를 들어 가설 하나의
+           판정만 고치면 payload 에 scores 나 status 가 들어 있지 않습니다.
+           그래서 각 항목은 "보냈다면 형식이 맞아야 한다"로 검사합니다.
+           무조건 존재를 요구하면 부분 저장이 전부 거부됩니다. */
         allow create, update: if signedIn()
-          && lockedByMyGroup(sid, cellId)
-          && request.resource.data.cellId == cellId
+          && lockedByMyGroup(sid, eventId)
+          && request.resource.data.eventId == eventId
           && request.resource.data.groupId == myGroup(sid)
-          && request.resource.data.status in ['draft', 'submitted']
-          && request.resource.data.scores.keys().hasOnly(['C1', 'C2', 'C3', 'C4'])
-          && request.resource.data.reasons.keys().hasOnly(['C1', 'C2', 'C3', 'C4']);
+          && (!('status' in request.resource.data)
+              || request.resource.data.status in ['draft', 'submitted'])
+          && (!('screen' in request.resource.data)
+              || request.resource.data.screen.keys().hasOnly(['H1', 'H2', 'H3', 'H4']))
+          && (!('scores' in request.resource.data)
+              || request.resource.data.scores.keys().hasOnly(['C1', 'C2', 'C3', 'C4']))
+          && (!('reasons' in request.resource.data)
+              || request.resource.data.reasons.keys().hasOnly(['C1', 'C2', 'C3', 'C4']));
         allow delete: if false;
       }
 
@@ -126,22 +147,23 @@ service cloud.firestore {
         allow delete: if false;
       }
 
-      /* 교사 명단. 콘솔에서만 만듭니다. 앱은 절대 쓰지 못합니다. */
-      match /teachers/{teacherId} {
-        allow read: if signedIn();
-        allow write: if false;
-      }
-
       /* 형성평가 답안.
          쓰기는 본인만. 읽기는 본인(get) 또는 교사(list) 입니다.
          get 과 list 를 나눈 이유: 학생이 컬렉션 전체를 훑으면 친구의 답안이
          딸려 나옵니다. list 를 교사에게만 열면 그 경로가 막힙니다. */
       match /quizAnswers/{ansId} {
-        allow get: if signedIn() && (ownsDocId(ansId) || isTeacher(sid));
-        allow list: if signedIn() && isTeacher(sid);
+        allow get: if signedIn() && (ownsDocId(ansId) || isTeacher());
+        allow list: if signedIn() && isTeacher();
         allow create, update: if signedIn() && ownsDocId(ansId);
         allow delete: if false;
       }
+    }
+
+    /* 교사 명단 — 반과 무관한 최상위 컬렉션.
+       콘솔에서만 만듭니다. 앱은 절대 쓰지 못합니다. */
+    match /teachers/{teacherId} {
+      allow read: if signedIn();
+      allow write: if false;
     }
 
     // 위에서 명시하지 않은 모든 경로는 차단

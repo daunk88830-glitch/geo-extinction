@@ -25,8 +25,68 @@ const cfg = {
 /** .env.local 이 아직 안 채워졌으면 false. 이때 앱은 Firebase 없이 동작합니다. */
 export const configured = Object.values(cfg).every((v) => typeof v === 'string' && v.length > 0);
 
-/** 수업 1회 단위. 반마다 다르게 주면 데이터가 섞이지 않습니다. */
-export const SESSION_ID = import.meta.env.VITE_SESSION_ID || 'default';
+/* ── 세션(수업 단위) ──────────────────────────────────────────
+ * 반마다 데이터를 나누는 칸막이입니다. sessions/{세션}/... 아래에 모든 것이
+ * 들어가므로, 세션이 다르면 학생 명단도 히트맵도 칸 점유도 완전히 분리됩니다.
+ *
+ * 빌드에 고정해 두면 반이 바뀔 때마다 다시 배포해야 합니다. 반이 9개이고
+ * 수업 날짜도 제각각이라, 실행 시점에 정하도록 했습니다. 정하는 순서는
+ *
+ *   1) 주소의 ?s= 값        교사가 반별 링크나 QR 로 나눠 줄 때
+ *   2) 이 브라우저에 저장된 값  한 번 고르면 새로고침해도 유지
+ *   3) .env 의 기본값        아무것도 없을 때
+ *
+ * 앞에 붙는 VITE_SESSION_PREFIX 는 학기 구분용입니다.
+ * 예: 접두사 "2026-1학기-" + 반 "3반" → "2026-1학기-3반"
+ * 내년에 같은 반 번호를 다시 써도 자료가 섞이지 않습니다.
+ */
+const SESSION_PREFIX = import.meta.env.VITE_SESSION_PREFIX || '';
+const LS_SESSION = 'geo:session';
+
+function resolveSession() {
+  try {
+    // 해시 라우터를 쓰므로 ?s= 가 # 앞뒤 어디에 있어도 찾습니다.
+    const q = new URLSearchParams(location.search);
+    const h = location.hash.includes('?')
+      ? new URLSearchParams(location.hash.slice(location.hash.indexOf('?')))
+      : null;
+    const fromUrl = q.get('s') || h?.get('s');
+    if (fromUrl) {
+      localStorage.setItem(LS_SESSION, fromUrl);
+      return SESSION_PREFIX + fromUrl;
+    }
+    const saved = localStorage.getItem(LS_SESSION);
+    if (saved) return SESSION_PREFIX + saved;
+  } catch {
+    /* 사생활 보호 모드 등에서 저장이 막혀 있어도 아래 기본값으로 이어집니다. */
+  }
+  return import.meta.env.VITE_SESSION_ID || 'default';
+}
+
+let sessionId = resolveSession();
+
+/** 지금 쓰는 세션. 실행 중에 바뀔 수 있으므로 항상 이 함수로 읽으세요. */
+export const getSessionId = () => sessionId;
+
+/** 반을 고르면 세션이 바뀝니다. 이후의 모든 읽기·쓰기가 그 반으로 갑니다. */
+export function setSessionKey(key) {
+  sessionId = SESSION_PREFIX + key;
+  try {
+    localStorage.setItem(LS_SESSION, key);
+  } catch {
+    /* 무시 */
+  }
+  return sessionId;
+}
+
+/** 화면에 보여줄 짧은 이름 (접두사를 뗀 값) */
+export function getSessionKey() {
+  try {
+    return localStorage.getItem(LS_SESSION) || '';
+  } catch {
+    return '';
+  }
+}
 
 let app = null;
 let auth = null;
