@@ -1,0 +1,974 @@
+<title>대멸종의 원인을 찾아라 — 발표자료</title>
+
+<style>
+/* ─────────────────────────────────────────────────────────────
+   디자인 노트
+
+   색: 퇴적암과 산화철에서 가져왔습니다.
+       바탕은 푸른기가 아주 옅게 도는 회색(석회암 먼지),
+       강조색은 산화철 적갈색 — 대멸종 표시에만 씁니다.
+       보조색은 심해 청록 — 생물 다양성에만 씁니다.
+       두 색이 이 발표의 두 축(멸종 / 생명)과 1:1로 대응합니다.
+
+   글꼴: 아티팩트 CSP 가 웹폰트 CDN 을 막고, 한글 폰트는 용량이 커
+       data URI 로 심을 수 없습니다. 그래서 한글은 시스템 글꼴을 쓰고,
+       위계는 굵기·크기·자간으로만 만듭니다. 숫자와 라벨에만 고정폭
+       글꼴을 써서 표가 세로로 정렬되게 합니다.
+
+   레이아웃: 1280×720 고정 슬라이드를 화면 크기에 맞춰 확대/축소합니다.
+       인쇄하면 슬라이드 한 장이 종이 한 장이 됩니다(PDF 저장용).
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --sans: "Pretendard", "Malgun Gothic", "맑은 고딕", "Apple SD Gothic Neo",
+          "Noto Sans KR", system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, "D2Coding", monospace;
+
+  /* 석회암 계열 — 순수 회색이 아니라 푸른기를 아주 살짝 넣었습니다 */
+  --ground:  #ECEEEF;
+  --surface: #FFFFFF;
+  --surface-2: #F4F6F7;
+  --line:    #D3D8DB;
+  --line-strong: #B2BAC0;
+  --ink:     #171B1F;
+  --muted:   #5B666E;
+
+  --rust:    #B04527;   /* 산화철 — 대멸종 */
+  --rust-dim:#E4D3CC;
+  --teal:    #1D6B67;   /* 심해 — 생물 다양성 */
+  --teal-dim:#CFE0DF;
+
+  --shadow: 0 1px 2px rgba(23,27,31,.06), 0 12px 32px rgba(23,27,31,.10);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground:  #101417;
+    --surface: #191E22;
+    --surface-2: #212830;
+    --line:    #2E363D;
+    --line-strong: #46525B;
+    --ink:     #E7EAEC;
+    --muted:   #9AA5AD;
+
+    --rust:    #DE7150;
+    --rust-dim:#472A21;
+    --teal:    #55AAA4;
+    --teal-dim:#173836;
+
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 36px rgba(0,0,0,.5);
+  }
+}
+
+/* 뷰어의 테마 토글이 항상 이깁니다 — 양방향 모두 */
+:root[data-theme="light"] {
+  --ground:#ECEEEF; --surface:#FFFFFF; --surface-2:#F4F6F7;
+  --line:#D3D8DB; --line-strong:#B2BAC0; --ink:#171B1F; --muted:#5B666E;
+  --rust:#B04527; --rust-dim:#E4D3CC; --teal:#1D6B67; --teal-dim:#CFE0DF;
+  --shadow: 0 1px 2px rgba(23,27,31,.06), 0 12px 32px rgba(23,27,31,.10);
+}
+:root[data-theme="dark"] {
+  --ground:#101417; --surface:#191E22; --surface-2:#212830;
+  --line:#2E363D; --line-strong:#46525B; --ink:#E7EAEC; --muted:#9AA5AD;
+  --rust:#DE7150; --rust-dim:#472A21; --teal:#55AAA4; --teal-dim:#173836;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 12px 36px rgba(0,0,0,.5);
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── 무대와 슬라이드 ─────────────────────────────────────── */
+.stage {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.slide {
+  position: relative;   /* 그리드 중앙 정렬 + .rail 의 기준 상자 */
+  width: 1280px;
+  height: 720px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  padding: 62px 76px 76px;
+  box-sizing: border-box;
+  display: none;
+  flex-direction: column;
+  transform-origin: center;
+}
+.slide.is-on { display: flex; }
+
+/* ── 슬라이드 상단 표시줄 ────────────────────────────────── */
+.meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 26px;
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .08em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.meta__sec { color: var(--rust); font-weight: 700; }
+.meta__time { font-variant-numeric: tabular-nums; }
+
+/* ── 표제 ───────────────────────────────────────────────── */
+.h1 {
+  margin: 0 0 18px;
+  font-size: 46px;
+  font-weight: 800;
+  line-height: 1.18;
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+.h2 {
+  margin: 0 0 14px;
+  font-size: 34px;
+  font-weight: 750;
+  line-height: 1.25;
+  letter-spacing: -.03em;
+  text-wrap: balance;
+}
+.lead {
+  margin: 0;
+  font-size: 21px;
+  line-height: 1.62;
+  color: var(--muted);
+  max-width: 66ch;
+}
+.lead b, .body b { color: var(--ink); font-weight: 700; }
+.body { margin: 0; font-size: 19px; line-height: 1.66; }
+
+.hl { color: var(--rust); font-weight: 700; }
+.hl-t { color: var(--teal); font-weight: 700; }
+
+/* ── 표지 ───────────────────────────────────────────────── */
+.cover { justify-content: center; }
+.cover__eyebrow {
+  font-family: var(--mono);
+  font-size: 14px;
+  letter-spacing: .16em;
+  color: var(--rust);
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+.cover__title {
+  margin: 0 0 20px;
+  font-size: 68px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.045em;
+}
+.cover__sub { margin: 0 0 44px; font-size: 24px; color: var(--muted); }
+.cover__foot {
+  display: flex;
+  gap: 44px;
+  padding-top: 26px;
+  border-top: 2px solid var(--ink);
+  font-size: 16px;
+}
+.cover__foot dt {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .1em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.cover__foot dd { margin: 0; font-weight: 600; }
+
+/* ── 본문 뼈대 ──────────────────────────────────────────── */
+.fill { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 22px; }
+.cols { display: grid; gap: 26px; }
+.cols--2 { grid-template-columns: 1fr 1fr; }
+.cols--2u { grid-template-columns: 1.15fr .85fr; }
+.cols--3 { grid-template-columns: repeat(3, 1fr); }
+
+.card {
+  padding: 22px 24px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+.card__label {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .1em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.card__t { font-size: 20px; font-weight: 750; margin: 0 0 8px; letter-spacing: -.02em; }
+.card__d { font-size: 16px; line-height: 1.58; color: var(--muted); margin: 0; }
+
+/* 강조 카드는 왼쪽에 산화철 띠 */
+.card--key { border-left: 4px solid var(--rust); background: var(--surface); }
+.card--life { border-left: 4px solid var(--teal); background: var(--surface); }
+
+/* ── 목록 ───────────────────────────────────────────────── */
+.list { margin: 0; padding: 0; list-style: none; display: grid; gap: 14px; }
+.list li {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 14px;
+  font-size: 19px;
+  line-height: 1.6;
+}
+.list__n {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--rust);
+  padding-top: 5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── 지질시대 비율 막대 ──────────────────────────────────── */
+/* overflow 를 자르지 않습니다 — 신생대(1.4%) 는 칸이 좁아
+   라벨을 막대 위쪽에 띄우는데, 잘라내면 그 라벨이 사라집니다. */
+.strata { display: flex; height: 92px; border: 1px solid var(--line-strong); }
+.strata__b {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--line-strong);
+  min-width: 0;
+}
+.strata__b:last-child { border-right: 0; }
+.strata__b span {
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.strata__b em {
+  display: block;
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 400;
+  opacity: .8;
+  font-variant-numeric: tabular-nums;
+}
+.st1 { background: var(--surface-2); color: var(--muted); }
+.st2 { background: var(--teal-dim); color: var(--teal); }
+.st3 { background: var(--rust-dim); color: var(--rust); }
+.st4 { background: var(--ink); color: var(--surface); }
+.strata__tag {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── 증거 강도 표 ───────────────────────────────────────── */
+.mx { width: 100%; border-collapse: collapse; font-size: 15px; }
+.mx th, .mx td {
+  border: 1px solid var(--line);
+  padding: 9px 8px;
+  text-align: center;
+}
+.mx thead th {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .04em;
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--surface-2);
+  text-transform: uppercase;
+}
+.mx tbody th {
+  text-align: left;
+  font-size: 15px;
+  font-weight: 700;
+  background: var(--surface-2);
+  white-space: nowrap;
+}
+.mx td { font-weight: 650; font-size: 14px; }
+/* 색만으로 구분하지 않습니다 — 칸마다 글자로도 씁니다 */
+.ev4 { background: var(--teal); color: #fff; }
+.ev3 { background: var(--teal-dim); color: var(--teal); }
+.ev2 { background: var(--surface); color: var(--muted); }
+.ev1 { background: var(--rust); color: #fff; }
+.ev1::after { content: " ✕"; }
+
+.legend { display: flex; gap: 18px; align-items: center; font-size: 14px; color: var(--muted); }
+.legend i {
+  display: inline-block;
+  width: 15px; height: 15px;
+  border: 1px solid var(--line-strong);
+  vertical-align: -3px;
+  margin-right: 6px;
+}
+
+/* ── 흐름도 ─────────────────────────────────────────────── */
+.flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.step {
+  padding: 20px 22px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--teal);
+  border-radius: 3px;
+  position: relative;
+}
+.step:nth-child(3) { border-top-color: var(--rust); }
+.step__n {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .1em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 9px;
+}
+.step__t { font-size: 20px; font-weight: 750; margin: 0 0 10px; letter-spacing: -.02em; }
+.step__l { margin: 0; padding-left: 17px; font-size: 15px; line-height: 1.72; color: var(--muted); }
+
+/* ── 수치 ───────────────────────────────────────────────── */
+.stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.stat__v {
+  font-family: var(--mono);
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: -.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--teal);
+}
+.stat__k { margin-top: 9px; font-size: 15px; color: var(--muted); line-height: 1.45; }
+
+/* ── 인용/강조 블록 ─────────────────────────────────────── */
+.quote {
+  padding: 20px 26px;
+  border-left: 4px solid var(--rust);
+  background: var(--surface-2);
+  font-size: 21px;
+  line-height: 1.55;
+  font-weight: 650;
+  letter-spacing: -.015em;
+}
+
+/* ── 하단 진행 표시 ─────────────────────────────────────── */
+.rail {
+  position: absolute;
+  left: 76px; right: 76px; bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.rail__bar { flex: 1; height: 3px; background: var(--line); position: relative; }
+.rail__fill { position: absolute; inset: 0 auto 0 0; background: var(--rust); }
+.rail__n { font-variant-numeric: tabular-nums; }
+
+/* ── 발표자 노트 ────────────────────────────────────────── */
+.notes {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  max-height: 42vh;
+  overflow-y: auto;
+  padding: 20px 28px 24px;
+  background: var(--ink);
+  color: var(--ground);
+  font-size: 15px;
+  line-height: 1.65;
+  border-top: 3px solid var(--rust);
+  display: none;
+  z-index: 20;
+}
+.notes.is-on { display: block; }
+.notes h4 {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  opacity: .65;
+}
+.notes p { margin: 0 0 9px; max-width: 100ch; }
+.notes p:last-child { margin-bottom: 0; }
+
+/* ── 조작 안내 ──────────────────────────────────────────── */
+.hint {
+  position: fixed;
+  right: 14px; bottom: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  color: var(--muted);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ── 인쇄(PDF 저장) ─────────────────────────────────────
+   슬라이드 한 장이 종이 한 장이 되도록 용지 크기를 슬라이드에 맞춥니다.
+   크롬에서 인쇄 → 대상을 "PDF로 저장", 배경 그래픽 켜기. */
+@media print {
+  @page { size: 1280px 720px; margin: 0; }
+  :root {
+    --ground:#FFFFFF; --surface:#FFFFFF; --surface-2:#F4F6F7;
+    --line:#C9D0D4; --line-strong:#9AA4AB; --ink:#12161A; --muted:#4E585F;
+    --rust:#9E3D22; --rust-dim:#E9DAD4; --teal:#1A5F5C; --teal-dim:#D4E3E2;
+    --shadow: none;
+  }
+  body { overflow: visible; background: #fff; }
+  .stage { position: static; display: block; }
+  .slide {
+    position: relative;
+    display: flex !important;
+    transform: none !important;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    break-after: page;
+    page-break-after: always;
+  }
+  .slide:last-child { break-after: auto; page-break-after: auto; }
+  .notes, .hint { display: none !important; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+
+<div class="stage" id="stage">
+
+  <!-- ─────────── 1 · 표지 ─────────── -->
+  <section class="slide cover" data-sec="" data-time="0:15">
+    <p class="cover__eyebrow">통합과학2 · 변화와 다양성</p>
+    <h1 class="cover__title">대멸종의 원인을 찾아라</h1>
+    <p class="cover__sub">고생물학 데이터로 검증하는 다섯 번의 대멸종 — 고1 3차시 탐구 수업</p>
+    <dl class="cover__foot">
+      <div><dt>웹 애플리케이션</dt><dd>geo-extinction.netlify.app</dd></div>
+      <div><dt>개발</dt><dd>Vanilla JavaScript · Firebase · Netlify</dd></div>
+      <div><dt>발표</dt><dd>10분</dd></div>
+    </dl>
+    <div class="notes" hidden>
+      <p>안녕하십니까. 고등학교 1학년 통합과학2 「변화와 다양성」 단원의 지질시대와 대멸종을 다루는 3차시 탐구 수업과, 그 수업에서 쓰는 웹 애플리케이션을 소개하겠습니다.</p>
+      <p>먼저 이 단원이 왜 문제인지부터 말씀드리겠습니다.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 2 · 문제 ─────────── -->
+  <section class="slide" data-sec="문제" data-time="0:55">
+    <div class="meta"><span class="meta__sec">문제</span><span class="meta__time">0:55</span></div>
+    <h2 class="h1">이 단원은 왜 암기 과목이 되는가</h2>
+    <div class="fill">
+      <p class="lead">
+        지질시대 이름, 표준화석, 대멸종 시기 — 외울 것의 목록으로 다뤄지기 쉽습니다.
+        그러나 성취기준이 요구하는 것은 암기가 아니라 <b>자료 해석과 근거 기반 추론</b>입니다.
+      </p>
+      <div class="cols cols--2">
+        <div class="card card--key">
+          <div class="card__label">문제 1</div>
+          <p class="card__t">데이터가 없다</p>
+          <p class="card__d">교과서의 다양성 곡선은 이미 완성된 그림입니다. 학생은 그 그림을 <b>읽지 않고 외웁니다.</b> 어디가 대멸종인지 이미 표시되어 있기 때문입니다.</p>
+        </div>
+        <div class="card card--key">
+          <div class="card__label">문제 2</div>
+          <p class="card__t">모든 가설이 그럴듯해진다</p>
+          <p class="card__d">원인 가설을 나열하고 끝내면 학생은 <b>“어느 것이든 나름 타당하다”</b>고 배웁니다. 실제 과학에서는 사건마다 증거의 강도가 크게 다릅니다.</p>
+        </div>
+      </div>
+      <div class="quote">
+        이 수업은 정답을 먼저 주지 않습니다. 학생이 데이터에서 대멸종을 직접 찾고,
+        가설을 증거로 <span class="hl">기각하는 경험</span>까지 하게 하는 것이 목표입니다.
+      </div>
+    </div>
+    <div class="rail"><span class="rail__n">02</span><span class="rail__bar"><i class="rail__fill"></i></span><span>문제 제기</span></div>
+    <div class="notes" hidden>
+      <p>이 단원은 외울 것의 목록으로 다뤄지기 쉽습니다. 그런데 성취기준이 요구하는 것은 암기가 아니라 자료 해석과 추론입니다.</p>
+      <p>문제는 두 가지입니다. 첫째, 교과서 그래프에는 대멸종 위치가 이미 표시되어 있습니다. 학생은 그 그림을 읽는 게 아니라 외웁니다. 둘째, 원인 가설을 나열만 하면 "어느 것이든 나름 타당하다"는 잘못된 상대주의를 가르치게 됩니다.</p>
+      <p>그래서 이 수업은 정답을 먼저 주지 않습니다. 특히 가설을 기각하는 경험까지 가는 것을 목표로 삼았습니다.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 3 · 설계 목표 ─────────── -->
+  <section class="slide" data-sec="설계" data-time="0:55">
+    <div class="meta"><span class="meta__sec">설계</span><span class="meta__time">0:55</span></div>
+    <h2 class="h1">수업 목표</h2>
+    <div class="fill">
+      <div class="card card--life">
+        <div class="card__label">성취기준 [10통과2-01-01]</div>
+        <p class="body">지질시대를 통해 지구 환경이 끊임없이 변화해 왔으며, 이러한 변화가 생물다양성에 미치는 영향을 <b>추론</b>할 수 있다.</p>
+      </div>
+      <ul class="list">
+        <li><span class="list__n">01</span><span><b>암기에서 판독으로.</b> 실제 고생물학·고기후 데이터를 직접 읽고 대멸종 구간을 스스로 찾습니다. 교사는 정답을 먼저 알려주지 않습니다.</span></li>
+        <li><span class="list__n">02</span><span><b>상대주의 깨기.</b> 자료가 증거 강도의 불균등함을 그대로 담고 있어, 학생이 근거를 들어 가설을 <span class="hl">기각</span>하게 됩니다.</span></li>
+        <li><span class="list__n">03</span><span><b>“모르겠다”라고 말할 수 있는 태도.</b> 모든 판정에 <b>“판단 보류 — 지금 자료로는 정할 수 없다”</b>를 두었습니다. 판단 유보는 실패가 아니라 정당한 결론입니다.</span></li>
+      </ul>
+      <p class="lead" style="font-size:18px">
+        관련 교과 역량 — <span class="hl-t">과학적 탐구 능력</span>(데이터 판독) ·
+        <span class="hl-t">과학적 사고력</span>(증거 기반 채택·기각·보류) ·
+        과학적 의사소통 능력(근거 서술과 재반박)
+      </p>
+    </div>
+    <div class="rail"><span class="rail__n">03</span><span class="rail__bar"><i class="rail__fill"></i></span><span>수업 설계</span></div>
+    <div class="notes" hidden>
+      <p>성취기준의 핵심 동사는 "추론할 수 있다"입니다. 추론하려면 추론할 재료가 있어야 합니다.</p>
+      <p>세 가지 목표를 세웠습니다. 첫째 암기에서 판독으로, 둘째 상대주의 깨기, 셋째가 가장 중요한데 "모르겠다"고 말할 수 있게 하는 것입니다. 모든 판정 항목에 판단 보류를 넣었습니다. 자료가 없을 때 유보하는 것은 과학적으로 정당한 결론이라는 걸 경험하게 하고 싶었습니다.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 4 · 학습자 ─────────── -->
+  <section class="slide" data-sec="설계" data-time="0:40">
+    <div class="meta"><span class="meta__sec">설계</span><span class="meta__time">0:40</span></div>
+    <h2 class="h1">학습자 분석 — 두 얼굴의 교실</h2>
+    <div class="fill">
+      <div class="cols cols--2">
+        <div class="card">
+          <div class="card__label">페르소나 1</div>
+          <p class="card__t">김서연 · “외울 게 너무 많아요”</p>
+          <p class="card__d">
+            성실하지만 과학을 암기 과목으로 봅니다. 그래프에서 값은 읽지만
+            <b>그래프로 무엇을 주장할 수 있는지</b>는 배운 적이 없습니다. 틀리는 것을 두려워합니다.<br><br>
+            → <span class="hl">틀려도 되는 자리</span>를 만듭니다. 정답 미공개 진단, 판단 보류 선택지.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card__label">페르소나 2</div>
+          <p class="card__t">박도윤 · “그건 제가 아는데요”</p>
+          <p class="card__d">
+            공룡을 좋아해 배경지식이 많지만 출처가 대중매체라
+            <b>일부가 부정확합니다.</b> (“대멸종은 다 소행성 때문”)<br><br>
+            → 자기 오개념이 <span class="hl">데이터로 반박되는 경험</span>을 하게 합니다.
+            심화 보기로 더 깊은 정보도 제공합니다.
+          </p>
+        </div>
+      </div>
+      <div class="card card--key">
+        <div class="card__label">페르소나 3 — 교사</div>
+        <p class="card__d" style="font-size:17px">
+          이지훈 · 9개 학급 담당. <b>활동지를 걷어 집계할 시간이 없어</b> 학생이 어디서 막히는지 수업이 끝난 뒤에야 압니다.
+          모둠 활동을 하면 한두 명만 하고 나머지는 구경합니다.
+          → 실시간 대시보드, 계정 발급 불필요, 판정 근거 자동 기록.
+        </p>
+      </div>
+    </div>
+    <div class="rail"><span class="rail__n">04</span><span class="rail__bar"><i class="rail__fill"></i></span><span>학습자 분석</span></div>
+    <div class="notes" hidden>
+      <p>페르소나를 셋 세웠습니다. 한 교실에 성격이 다른 두 학생이 같이 있다는 게 설계의 출발점이었습니다.</p>
+      <p>김서연은 암기형이라 틀리는 걸 두려워합니다. 그래서 틀려도 되는 자리를 만들었습니다. 박도윤은 아는 게 많은데 출처가 다큐멘터리라 일부가 틀립니다. 이 학생에게는 자기 지식이 데이터로 반박되는 경험이 필요합니다.</p>
+      <p>세 번째는 교사입니다. 9개 학급을 맡으면 활동지를 걷어서 집계할 시간이 없습니다.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 5 · 3차시 흐름 ─────────── -->
+  <section class="slide" data-sec="설계" data-time="0:40">
+    <div class="meta"><span class="meta__sec">설계</span><span class="meta__time">0:40</span></div>
+    <h2 class="h1">3차시 흐름</h2>
+    <div class="fill">
+      <div class="flow">
+        <div class="step">
+          <div class="step__n">1차시 · 진단과 탐색</div>
+          <p class="step__t">무엇을 안다고 생각하는가</p>
+          <ul class="step__l">
+            <li>선개념 5문항 <b>정답 미공개</b></li>
+            <li>스크롤로 지질시대 탐색</li>
+            <li>시대별 환경·생물 카드뉴스</li>
+          </ul>
+        </div>
+        <div class="step">
+          <div class="step__n">2차시 · 데이터 분석</div>
+          <p class="step__t">대멸종을 직접 찾는다</p>
+          <ul class="step__l">
+            <li>그래프 4종 판독</li>
+            <li><b>구간을 직접 표시</b></li>
+            <li>학급 히트맵과 비교 → 정답 공개</li>
+          </ul>
+        </div>
+        <div class="step">
+          <div class="step__n">3차시 · 가설 검증</div>
+          <p class="step__t">원인을 증거로 판정한다</p>
+          <ul class="step__l">
+            <li>모둠별 사건 1개 담당</li>
+            <li>네 가설 판정 → 반론 → 재반박</li>
+            <li>발표 · 형성평가</li>
+          </ul>
+        </div>
+      </div>
+      <div class="quote" style="font-size:19px">
+        평가는 <span class="hl">기각한 가설과 그 근거</span>를 중심으로 봅니다.
+        기각했다고 감점하지 않습니다 — 근거의 구체성이 평가 대상입니다.
+      </div>
+    </div>
+    <div class="rail"><span class="rail__n">05</span><span class="rail__bar"><i class="rail__fill"></i></span><span>수업 흐름</span></div>
+    <div class="notes" hidden>
+      <p>3차시 구성입니다. 1차시는 진단과 탐색, 2차시는 데이터에서 대멸종을 직접 찾기, 3차시는 원인 가설 검증입니다.</p>
+      <p>평가에서 중요한 점은, 기각했다고 감점하지 않는다는 것입니다. 근거를 얼마나 구체적으로 썼는지를 봅니다.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 6 · 시연 1 ─────────── -->
+  <section class="slide" data-sec="시연" data-time="0:55">
+    <div class="meta"><span class="meta__sec">시연 ①</span><span class="meta__time">0:55</span></div>
+    <h2 class="h1">타임라인 — 시간의 규모를 몸으로</h2>
+    <div class="fill">
+      <p class="lead">시대별 화면 세로 길이를 <b>실제 지속 기간에 비례</b>시켰습니다. 선캄브리아시대를 지나는 데 스크롤이 한참 걸립니다.</p>
+      <div style="padding-top:34px">
+        <div class="strata">
+          <div class="strata__b st1" style="flex:88.2"><span>선캄브리아시대<em>88.2%</em></span></div>
+          <div class="strata__b st2" style="flex:6.3"><span>고생대<em>6.3%</em></span></div>
+          <div class="strata__b st3" style="flex:4.1"><span>중생대<em>4.1%</em></span></div>
+          <div class="strata__b st4" style="flex:1.4"><span class="strata__tag">신생대 1.4%</span></div>
+        </div>
+      </div>
+      <div class="cols cols--2u">
+        <p class="body">
+          표로 된 숫자로는 실감이 나지 않습니다. <b>스크롤 시간</b>으로 바꾸면
+          “지구 역사의 대부분은 우리가 이름도 잘 모르는 시대였다”가 몸에 남습니다.
+          시대마다 배경 이미지가 흐리게 깔리고, 환경·생물·주요 사건·표준화석이 카드뉴스로 제시됩니다.
+        </p>
+        <div class="card">
+          <div class="card__label">교육과정 표기 규칙</div>
+          <p class="card__d">학생 화면에는 <b>대(代) 수준 표기만</b> 씁니다. 기(紀) 명칭과 정확한 연대는 「심화 보기」 안에만 두었습니다. 표준화석도 암기를 요구하지 않습니다.</p>
+        </div>
+      </div>
+    </div>
+    <div class="rail"><span class="rail__n">06</span><span class="rail__bar"><i class="rail__fill"></i></span><span>앱 시연</span></div>
+    <div class="notes" hidden>
+      <p>첫 번째 화면입니다. 시대별 세로 길이를 실제 지속 기간에 비례시켰습니다. 선캄브리아시대가 88.2%라 스크롤이 한참 걸립니다.</p>
+      <p>표로 "선캄브리아시대 88%"라고 읽는 것과, 실제로 스크롤을 한참 내리는 것은 다릅니다.</p>
+      <p>교사용 지도서 지침에 따라 학생 화면에는 대(代) 수준만 씁니다. 기 명칭과 연대는 심화 보기 안에만 두었습니다.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 7 · 시연 2 ─────────── -->
+  <section class="slide" data-sec="시연" data-time="1:10">
+    <div class="meta"><span class="meta__sec">시연 ②</span><span class="meta__time">1:10</span></div>
+    <h2 class="h1">데이터 탐구 — 학생이 먼저 찾는다</h2>
+    <div class="fill">
+      <div class="cols cols--2u">
+        <div>
+          <p class="body" style="margin-bottom:16px">
+            네 그래프가 <b>같은 시간축을 공유하며 세로로 쌓여</b> 있습니다.
+            손가락으로 훑으면 그 시점의 값이 읽힙니다.
+          </p>
+          <ul class="list" style="gap:9px">
+            <li><span class="list__n" style="color:var(--teal)">1</span><span style="font-size:17px">생물 다양성 — 화석으로 확인된 속(genus) 수</span></li>
+            <li><span class="list__n" style="color:var(--teal)">2</span><span style="font-size:17px">화석 기록 수 — 조사된 표본 수</span></li>
+            <li><span class="list__n" style="color:var(--teal)">3</span><span style="font-size:17px">전 지구 평균 기온</span></li>
+            <li><span class="list__n" style="color:var(--teal)">4</span><span style="font-size:17px">대기 중 이산화 탄소 (로그 눈금)</span></li>
+          </ul>
+        </div>
+        <div class="card card--key">
+          <div class="card__label">핵심 발문</div>
+          <p class="card__d" style="font-size:17px">
+            “다양성이 낮게 보이는 구간은 <b>정말 생물이 줄어든 것</b>일까,
+            아니면 <b>그 시대 화석이 적게 남은 것</b>일까?”<br><br>
+            화석 기록 수 그래프를 함께 주고 학생이 스스로 따지게 합니다.
+          </p>
+        </div>
+      </div>
+      <div class="quote" style="font-size:19px">
+        학생이 표시한 구간이 <span class="hl-t">학급 히트맵</span>으로 실시간 누적됩니다 —
+        “나는 여기라고 봤는데 친구들은 저기를 많이 골랐다”가 수업 중에 일어납니다.
+        종이로는 걷어서 집계할 시간이 없습니다.
+      </div>
+    </div>
+    <div class="rail"><span class="rail__n">07</span><span class="rail__bar"><i class="rail__fill"></i></span><span>앱 시연</span></div>
+    <div class="notes" hidden>
+      <p>두 번째 화면입니다. 그래프 넷이 같은 시간축을 공유합니다. 손가락으로 훑으면 그 시점 값이 읽힙니다.</p>
+      <p>핵심 발문은 이겁니다 — 다양성이 낮은 구간이 정말 생물이 줄어든 건지, 아니면 그 시대 화석이 적게 남은 건지. 그래서 화석 기록 수 그래프를 같이 줬습니다.</p>
+      <p>그리고 학생이 표시한 구간이 실시간으로 학급 히트맵에 쌓입니다. 종이 활동지로는 걷어서 집계할 시간이 없는데, 이건 즉시 됩니다. 이 비교가 수업 중에 일어나는 게 중요합니다.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 8 · 시연 3 ─────────── -->
+  <section class="slide" data-sec="시연" data-time="1:10">
+    <div class="meta"><span class="meta__sec">시연 ③</span><span class="meta__time">1:10</span></div>
+    <h2 class="h1">원인 판정 — 한 모둠이 한 사건을 맡는다</h2>
+    <div class="fill">
+      <div class="cols cols--2">
+        <div class="card card--life">
+          <div class="card__label">1단계 · 네 가설을 모두 검토</div>
+          <p class="card__d" style="font-size:17px">
+            맡은 사건에 대해 <b>네 가설의 증거 카드를 모두 읽고</b> 각각 판정합니다.<br><br>
+            <b>잘 설명함 / 일부만 설명함 / <span class="hl">설명하지 못함</span></b><br><br>
+            판정마다 한 줄 근거를 씁니다. 넷을 다 해야 2단계가 열립니다.
+          </p>
+        </div>
+        <div class="card card--key">
+          <div class="card__label">2단계 · 하나를 골라 깊이 판정</div>
+          <p class="card__d" style="font-size:17px">
+            가장 잘 설명하는 가설 하나를 골라 <b>기준 4개</b>로 판정합니다.<br><br>
+            증거가 있는가 · 전 지구적이었는가 ·<br>다른 사실에 어긋나지 않는가 · 멸종시킬 만큼 위력적이었는가<br><br>
+            → <b>AI 반론</b> → 재반박 → 제출
+          </p>
+        </div>
+      </div>
+      <div class="cols cols--2">
+        <div class="card">
+          <div class="card__label">판정 중에도 자료를 본다</div>
+          <p class="card__d">근거를 쓰다가 기온을 다시 확인하려고 앞 화면으로 나가면 <b>쓰던 글이 사라집니다.</b> 그래서 판정 화면 안에 그래프를 접어 두었습니다.</p>
+        </div>
+        <div class="card">
+          <div class="card__label">AI가 멈춰도 수업은 진행</div>
+          <p class="card__d">12초 제한 → 1회 재시도 → 실패하면 <b>미리 준비된 반론</b>으로 대체합니다. AI는 있으면 좋은 것이지 없으면 멈추는 것이 아닙니다.</p>
+        </div>
+      </div>
+    </div>
+    <div class="rail"><span class="rail__n">08</span><span class="rail__bar"><i class="rail__fill"></i></span><span>앱 시연</span></div>
+    <div class="notes" hidden>
+      <p>핵심 활동입니다. 한 모둠이 대멸종 사건 하나를 통째로 맡습니다. 사건이 5개라 5모둠으로 나눕니다.</p>
+      <p>1단계에서 네 가설을 다 검토합니다. "설명하지 못함"이 선택지에 있다는 게 중요합니다. 넷을 다 해야 2단계가 열립니다.</p>
+      <p>2단계에서 하나를 골라 기준 4개로 판정하고, AI가 근거를 읽고 반론을 제기합니다. 모둠이 재반박을 씁니다.</p>
+      <p>두 가지 실무적 결정이 있는데, 하나는 판정 중에 그래프를 다시 볼 수 있게 한 것이고, 다른 하나는 AI가 느려도 수업이 안 멈추게 한 겁니다.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 9 · 설계 핵심 ─────────── -->
+  <section class="slide" data-sec="시연" data-time="1:10">
+    <div class="meta"><span class="meta__sec">설계 핵심</span><span class="meta__time">1:10</span></div>
+    <h2 class="h2">증거 강도를 <span class="hl">일부러 균등하지 않게</span> 만들었습니다</h2>
+    <div class="fill">
+      <div style="overflow-x:auto">
+        <table class="mx">
+          <thead>
+            <tr><th>사건 \ 가설</th><th>기후 변화설</th><th>해양 무산소설</th><th>화산 폭발설</th><th>소행성 충돌설</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>대멸종 1</th><td class="ev4">강함</td><td class="ev3">보통</td><td class="ev2">약함</td><td class="ev1">증거 없음</td></tr>
+            <tr><th>대멸종 2</th><td class="ev3">보통</td><td class="ev4">강함</td><td class="ev2">약함</td><td class="ev2">약함</td></tr>
+            <tr><th>대멸종 3</th><td class="ev4">강함</td><td class="ev4">강함</td><td class="ev4">강함</td><td class="ev1">증거 없음</td></tr>
+            <tr><th>대멸종 4</th><td class="ev4">강함</td><td class="ev3">보통</td><td class="ev4">강함</td><td class="ev2">약함</td></tr>
+            <tr><th>대멸종 5</th><td class="ev3">보통</td><td class="ev2">약함</td><td class="ev3">논쟁 중</td><td class="ev4">강함</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--teal)"></i>강함</span>
+        <span><i style="background:var(--teal-dim)"></i>보통</span>
+        <span><i style="background:var(--surface)"></i>약함</span>
+        <span><i style="background:var(--rust)"></i>증거 없음</span>
+        <span style="margin-left:auto;font-family:var(--mono);font-size:12px">교사용 자료 — 학생 화면에는 표시되지 않습니다</span>
+      </div>
+      <div class="cols cols--2">
+        <div class="card card--key">
+          <p class="card__d" style="font-size:17px">
+            <b>대멸종 3</b>은 사상 최대 규모인데 <span class="hl">충돌 증거가 없습니다.</span>
+            “규모가 크면 원인도 극적이어야 한다”는 직관이 깨지는 지점입니다.
+          </p>
+        </div>
+        <div class="card card--key">
+          <p class="card__d" style="font-size:17px">
+            <b>대멸종 4</b>는 큰 크레이터가 실제로 있지만 <span class="hl">연대가 약 1,300만 년 어긋납니다.</span>
+            “증거가 있다”와 “증거가 이것을 설명한다”는 다릅니다.
+          </p>
+        </div>
+      </div>
+      <p class="lead" style="font-size:17px">
+        다섯 사건 <b>모두</b>에 약하거나 없는 가설이 하나 이상 있습니다 →
+        어느 사건을 맡든 <b>모든 모둠이 기각을 한 번은 경험</b>합니다.
+      </p>
+    </div>
+    <div class="rail"><span class="rail__n">09</span><span class="rail__bar"><i class="rail__fill"></i></span><span>설계 핵심</span></div>
+    <div class="notes" hidden>
+      <p>이 슬라이드가 이 발표에서 가장 중요합니다. 20개 칸의 증거 강도를 일부러 균등하지 않게 구성했습니다.</p>
+      <p>붉은 칸이 증거가 아예 없는 칸입니다. 대멸종 3은 사상 최대 규모인데 충돌 증거가 없습니다. 대멸종 4는 크레이터가 실제로 있는데 연대가 1300만 년 어긋납니다. "증거가 있다"와 "증거가 이 사건을 설명한다"가 다르다는 걸 배우는 칸입니다.</p>
+      <p>중요한 건, 다섯 사건 모두에 약하거나 없는 가설이 하나 이상 들어 있다는 겁니다. 그래서 어느 사건을 맡든 모든 모둠이 기각을 한 번은 경험합니다. 교사가 배정을 조정할 필요가 없습니다.</p>
+      <p>이 표는 교사용이고 학생 화면에는 나오지 않습니다. 학생이 미리 알면 조사할 이유가 사라지기 때문입니다.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 10 · 기술 ─────────── -->
+  <section class="slide" data-sec="기술" data-time="0:55">
+    <div class="meta"><span class="meta__sec">기술</span><span class="meta__time">0:55</span></div>
+    <h2 class="h1">교실이 만든 기술적 제약</h2>
+    <div class="fill">
+      <p class="lead">30명이 <b>같은 순간에</b> 데이터를 씁니다. 일반적인 웹 앱과 다른 설계가 필요했습니다.</p>
+      <div class="cols cols--3">
+        <div class="card">
+          <div class="card__label">문제 1 · 쓰기 충돌</div>
+          <p class="card__d">학급 표시를 세려면 카운터 하나를 30명이 증가시키는 방식이 자연스러워 보입니다. <b>그 문서 하나에 쓰기가 몰려 병목이 됩니다.</b><br><br>→ 카운터를 만들지 않고, 표시를 <span class="hl-t">학생별 문서로 분리</span>해 각자 세게 했습니다.</p>
+        </div>
+        <div class="card">
+          <div class="card__label">문제 2 · 사건 선점 경쟁</div>
+          <p class="card__d">사건이 5개뿐이라 수업 시작 직후 경쟁이 가장 치열합니다.<br><br>→ 점유를 <span class="hl-t">“만들기 전용”</span>으로 제한했습니다. 두 모둠이 동시에 눌러도 서버가 하나만 성공시킵니다.</p>
+        </div>
+        <div class="card">
+          <div class="card__label">문제 3 · 조용한 실패</div>
+          <p class="card__d">개발 중 실제로 겪었습니다. 저장이 거부됐는데 화면에 표시가 없어, 학생은 저장된 줄 알고 진행하다 <b>다음 단계가 안 열렸습니다.</b><br><br>→ 실패를 <span class="hl">반드시 화면에 표시</span>하도록 고쳤습니다.</p>
+        </div>
+      </div>
+      <div class="stats" style="margin-top:6px">
+        <div><div class="stat__v">7,400</div><div class="stat__k">줄 (JS + CSS)</div></div>
+        <div><div class="stat__v">7</div><div class="stat__k">화면</div></div>
+        <div><div class="stat__v">3</div><div class="stat__k">일 개발</div></div>
+        <div><div class="stat__v">0</div><div class="stat__k">프레임워크<br>(Vanilla JS)</div></div>
+      </div>
+    </div>
+    <div class="rail"><span class="rail__n">10</span><span class="rail__bar"><i class="rail__fill"></i></span><span>기술 설계</span></div>
+    <div class="notes" hidden>
+      <p>기술적으로 가장 어려웠던 건 30명이 같은 순간에 데이터를 쓴다는 조건이었습니다.</p>
+      <p>첫째, 학급 표시를 세려면 카운터 하나를 30명이 올리는 방식이 자연스러운데, 그러면 그 문서 하나에 쓰기가 몰려 병목이 됩니다. 그래서 카운터를 아예 만들지 않고 표시를 학생별 문서로 쪼갰습니다.</p>
+      <p>둘째, 사건이 5개뿐이라 선점 경쟁이 생깁니다. 점유를 "만들기 전용"으로 막아서 먼저 누른 모둠이 이기게 했습니다. 이게 서버에서 보장됩니다.</p>
+      <p>셋째는 실제로 겪은 문제인데, 저장이 조용히 실패하고 있었습니다. 수업 중에는 원인을 파악할 시간이 없으니 실패는 즉시 눈에 보여야 합니다.</p>
+      <p>프레임워크는 쓰지 않았습니다. 30명이 학교 와이파이로 동시에 접속하니 초기 로딩 용량이 곧 수업 시작 시간이라서요.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 11 · 효과 ─────────── -->
+  <section class="slide" data-sec="정리" data-time="0:40">
+    <div class="meta"><span class="meta__sec">정리</span><span class="meta__time">0:40</span></div>
+    <h2 class="h1">수업 효과와 평가</h2>
+    <div class="fill">
+      <div class="cols cols--2">
+        <div class="card card--life">
+          <div class="card__label">학생에게</div>
+          <p class="card__d" style="font-size:17px">
+            · 대멸종 위치를 <b>외우는 대신 판독</b>합니다<br>
+            · 자기 판단을 학급 전체와 즉시 비교합니다<br>
+            · 근거를 들어 가설을 <b>기각</b>해 봅니다<br>
+            · <b>“지금 자료로는 모른다”</b>고 답해도 됩니다<br>
+            · 선개념 사전-사후 비교로 자기 변화를 확인합니다
+          </p>
+        </div>
+        <div class="card card--key">
+          <div class="card__label">교사에게</div>
+          <p class="card__d" style="font-size:17px">
+            · 오개념 분포를 <b>수업 중에</b> 확인합니다<br>
+            · 모둠 진행을 한눈에 봅니다<br>
+            · 판정 근거가 <b>과정중심평가 자료</b>로 남습니다<br>
+            · 서술형 답안이 오개념 유형별로 묶입니다<br>
+            · 9개 학급의 자료가 서로 섞이지 않습니다
+          </p>
+        </div>
+      </div>
+      <div class="quote" style="font-size:19px">
+        서술형 피드백은 <span class="hl">점수를 학생에게 보이지 않습니다.</span>
+        포함된 요소 · 빠진 요소 · 다시 볼 자료 세 가지만 줍니다 —
+        학생이 점수만 보고 피드백을 읽지 않는 것을 막기 위해서입니다.
+      </div>
+    </div>
+    <div class="rail"><span class="rail__n">11</span><span class="rail__bar"><i class="rail__fill"></i></span><span>수업 효과</span></div>
+    <div class="notes" hidden>
+      <p>학생 쪽 효과와 교사 쪽 효과를 나눠 정리했습니다.</p>
+      <p>한 가지만 강조하면, 서술형 피드백에서 점수를 학생에게 보이지 않습니다. 점수를 보여주면 학생이 점수만 보고 피드백은 안 읽습니다. 그래서 포함된 요소, 빠진 요소, 다시 볼 자료 세 가지만 줍니다. 수준 판정은 교사 대시보드로만 갑니다.</p>
+    </div>
+  </section>
+
+  <!-- ─────────── 12 · 마무리 ─────────── -->
+  <section class="slide" data-sec="정리" data-time="0:35">
+    <div class="meta"><span class="meta__sec">정리</span><span class="meta__time">0:35</span></div>
+    <h2 class="h1">한계와 다음 단계</h2>
+    <div class="fill">
+      <div class="cols cols--2">
+        <div class="card">
+          <div class="card__label">아직 검증되지 않은 것</div>
+          <p class="card__d" style="font-size:17px">
+            · 30대 동시 접속은 <b>설계상 대비일 뿐</b> 교실 와이파이 실측 전입니다<br>
+            · AI 응답 품질은 학생이 쓴 근거의 구체성에 크게 좌우됩니다<br>
+            · 형성평가 문항이 아직 표본 수준입니다
+          </p>
+        </div>
+        <div class="card">
+          <div class="card__label">다음에 할 것</div>
+          <p class="card__d" style="font-size:17px">
+            · 색으로 모둠을 구분하는 부분에 <b>색각 이상 보조 표시</b><br>
+            · 교사가 문항을 직접 관리하는 시트 연동<br>
+            · 모둠 간 상호 반론 (지금은 AI 반론만)
+          </p>
+        </div>
+      </div>
+      <div class="card card--key">
+        <p class="card__d" style="font-size:18px">
+          자료의 한계도 그대로 보여줍니다 — <b>482백만 년 전 이전은 기온·CO₂ 복원 자료가 존재하지 않아 비워 두었습니다.</b>
+          채워 넣지 않는 것도 탐구의 일부로 다룹니다.
+        </p>
+      </div>
+      <div class="cover__foot" style="margin-top:auto">
+        <div><dt>웹 애플리케이션</dt><dd>geo-extinction.netlify.app</dd></div>
+        <div><dt>데이터 출처</dt><dd>Paleobiology Database · PhanDA (Judd et al. 2024) · ICS</dd></div>
+      </div>
+    </div>
+    <div class="rail"><span class="rail__n">12</span><span class="rail__bar"><i class="rail__fill"></i></span><span>마무리</span></div>
+    <div class="notes" hidden>
+      <p>한계를 솔직하게 말씀드리면, 30대 동시 접속은 설계상 대비했을 뿐 아직 교실에서 실측하지 못했습니다. 형성평가 문항도 표본 수준입니다.</p>
+      <p>마지막으로 하나만 더 말씀드리면, 482백만 년 전 이전은 기온과 CO2 복원 자료가 아예 없습니다. 이걸 채워 넣지 않고 비워 뒀습니다. 자료의 한계를 드러내는 것도 탐구의 일부라고 생각했습니다.</p>
+      <p>이상입니다. 감사합니다.</p>
+    </div>
+  </section>
+
+</div>
+
+<div class="notes" id="notes"></div>
+<div class="hint">← → 이동 · N 발표자 노트 · P 인쇄(PDF)</div>
+
+<script>
+(function () {
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const stage  = document.getElementById('stage');
+  const notes  = document.getElementById('notes');
+  let i = 0;
+  let notesOn = false;
+
+  /* 1280×720 고정 슬라이드를 창 크기에 맞춰 확대/축소합니다.
+     내부 치수를 전부 px 로 잡을 수 있어 어느 화면에서든 배치가 같습니다. */
+  function fit() {
+    const pad = notesOn ? 0.56 : 0.94;
+    const s = Math.min(window.innerWidth / 1280, (window.innerHeight * pad) / 720);
+    slides.forEach((el) => (el.style.transform = 'scale(' + s + ')'));
+    stage.style.alignItems = notesOn ? 'start' : 'center';
+    stage.style.paddingTop = notesOn ? '10px' : '0';
+  }
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((el, k) => el.classList.toggle('is-on', k === i));
+
+    // 하단 진행 막대
+    const fill = slides[i].querySelector('.rail__fill');
+    if (fill) fill.style.width = ((i + 1) / slides.length * 100) + '%';
+
+    // 발표자 노트
+    const src = slides[i].querySelector('.notes[hidden]');
+    notes.innerHTML = src
+      ? '<h4>발표자 노트 · ' + (slides[i].dataset.time || '') + '</h4>' + src.innerHTML
+      : '<h4>발표자 노트</h4><p>—</p>';
+    fit();
+  }
+
+  function toggleNotes() {
+    notesOn = !notesOn;
+    notes.classList.toggle('is-on', notesOn);
+    fit();
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); show(i + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(i - 1); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+    else if (e.key === 'n' || e.key === 'N') toggleNotes();
+    else if (e.key === 'p' || e.key === 'P') window.print();
+  });
+
+  // 화면을 눌러도 넘어갑니다 — 왼쪽 1/4 은 이전, 나머지는 다음
+  stage.addEventListener('click', (e) => show(e.clientX < window.innerWidth / 4 ? i - 1 : i + 1));
+
+  window.addEventListener('resize', fit);
+  show(0);
+})();
+</script>
