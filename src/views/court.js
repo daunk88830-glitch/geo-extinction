@@ -281,6 +281,14 @@ export default async function court(outlet) {
 
     root.querySelector('#ct-claim')?.addEventListener('click', onClaim);
 
+    // 제출 후 안내에서 사건 목록으로
+    root.querySelector('#ct-toList')?.addEventListener('click', () => {
+      selectedId = null;
+      teardownDetail();
+      renderList();
+      window.scrollTo(0, 0);
+    });
+
     // 위치 띠의 번호를 누르면 그 사건으로 바로 이동합니다.
     root.querySelectorAll('[data-goto]').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -430,8 +438,28 @@ export default async function court(outlet) {
           <button class="btn ct__submitBtn" id="ct-submitBtn" type="button" ${readOnly ? 'disabled' : ''}>
             ${v.status === 'submitted' ? '제출 완료' : '판정 제출'}
           </button>
+
+          ${v.status === 'submitted' ? doneBlock(ev) : ''}
         </div>
       </section>`;
+  }
+
+  /* 제출한 뒤 여기서 무엇을 하면 되는지.
+     이 안내가 없으면 제출한 자리가 막다른 길이 됩니다 — 다음으로 가는 길이
+     사건 목록 화면에만 있어서, 학생은 뒤로 나가야 한다는 것을 알 수 없습니다. */
+  function doneBlock(ev) {
+    return `
+      <div class="ct__done">
+        <p class="ct__doneTitle">${esc(ev.studentLabel)} 판정을 제출했습니다.</p>
+        <p class="ct__doneSub">
+          다른 모둠이 맡은 사건도 열어 볼 수 있습니다.
+          우리 모둠의 판정은 학급 판정표에 올라갑니다.
+        </p>
+        <div class="ct__doneActs">
+          <a class="btn" href="#/quiz">형성평가로</a>
+          <button class="btn btn--ghost" id="ct-toList" type="button">다른 모둠의 판정 보기</button>
+        </div>
+      </div>`;
   }
 
   /* ── 입력 연결 ──────────────────────────────────────────── */

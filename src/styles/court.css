@@ -630,6 +630,20 @@
 .ct__rebut b { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
 .ct__rebut p { font-size: 0.98rem; line-height: 1.65; }
 
+/* ── 제출 완료 안내 ─────────────────────────────────────── */
+.ct__done {
+  margin-top: 22px;
+  padding: 20px 22px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--r);
+}
+.ct__doneTitle { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+.ct__doneSub { font-size: 0.95rem; line-height: 1.6; color: var(--muted); }
+.ct__doneActs { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.ct__doneActs .btn { flex: 1 1 auto; text-align: center; }
+
 .ct__counterHead {
   display: flex;
   align-items: baseline;
