@@ -17,7 +17,8 @@ const SYSTEM = `너는 고등학교 1학년 통합과학 수업의 "반론 검�
 
 규칙:
 - 반드시 질문 형태로 쓴다. 정답이나 결론을 알려주지 않는다.
-- 각 반론은 2~3문장, 고1이 읽는 말로 쓴다. 전문 용어를 쓰면 괄호로 풀어준다.
+- 각 반론은 2문장, 220자 이내로 짧게 쓴다. 고1이 읽는 말로 쓰고, 전문 용어는 괄호로 풀어준다.
+  (수업 중에 읽고 바로 답해야 하므로 길면 읽히지 않는다)
 - 학생이 쓴 근거를 직접 인용하거나 짚어서, 그 근거의 어느 부분이 약한지 겨냥한다.
 - 기(紀) 명칭(예: 페름기, 백악기)이나 정확한 연대 수치를 쓰지 않는다. 교육과정상 다루지 않는다.
 - 학생을 비난하거나 평가하지 않는다. "틀렸다"고 말하지 않는다.
@@ -36,11 +37,17 @@ const SYSTEM = `너는 고등학교 1학년 통합과학 수업의 "반론 검�
 const SCHEMA = {
   type: 'object',
   properties: {
+    /* 개수와 길이를 스키마로 못박습니다.
+       교실에서 이 응답을 기다리는 시간이 곧 수업 시간이라, 출력이 길어지면
+       그만큼 느려집니다. 게다가 반론이 길면 고1이 읽다가 흐름을 놓칩니다.
+       두 개, 각 220자 이내가 화면에서도 읽기 좋은 길이입니다. */
     rebuttals: {
       type: 'array',
+      minItems: 2,
+      maxItems: 2,
       items: {
         type: 'object',
-        properties: { text: { type: 'string' } },
+        properties: { text: { type: 'string', maxLength: 220 } },
         required: ['text'],
         additionalProperties: false,
       },
@@ -90,7 +97,7 @@ ${scoreText}
   try {
     const res = await client.messages.create({
       model: 'claude-opus-5',
-      max_tokens: 2000,
+      max_tokens: 900,
       system: SYSTEM,
       // 짧은 산출물이라 낮은 효, 대신 교실에서 기다리는 시간을 줄입니다.
       output_config: { effort: 'low', format: { type: 'json_schema', schema: SCHEMA } },
