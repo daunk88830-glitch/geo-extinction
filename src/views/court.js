@@ -53,6 +53,10 @@ export default async function court(outlet) {
   let dataStack = null;      // 판정 화면 안에서 다시 펼쳐 보는 그래프 묶음
   let detailGen = 0;         // 화면이 바뀌면 올라갑니다 (뒤늦게 끝난 로딩 버리기)
   const timers = new Map();
+  /* 아직 서버에 닿지 않은 편집. 화면 갱신이 이 칸을 덮어쓰지 못하게 막습니다.
+     (입력 → 600ms 대기 중에 다른 칸을 건드리면, 그쪽 저장의 응답이 먼저 와서
+      아직 저장 안 된 이 칸을 빈 값으로 되돌려 버립니다) */
+  const pending = new Set();
   let flashTimer = 0;
 
   outlet.innerHTML = '<div class="ct" id="ct-root"></div>';
@@ -546,10 +550,13 @@ export default async function court(outlet) {
      계속 진행하다가 다음 단계가 안 열리는 이유를 알 수 없습니다. */
   function queueSave(key, partial) {
     clearTimeout(timers.get(key));
+    pending.add(key);
     timers.set(
       key,
       setTimeout(async () => {
         const r = await savePatch(selectedId, partial);
+        // 서버에 닿은 뒤에야 잠금을 풉니다. 그전까지 이 칸은 화면 갱신에서 빠집니다.
+        pending.delete(key);
         if (r === 'denied') {
           flash('저장이 거부되었습니다. 이 사건을 맡은 모둠만 수정할 수 있습니다.');
         } else if (r === 'error') {
@@ -557,6 +564,12 @@ export default async function court(outlet) {
         }
       }, SAVE_DELAY)
     );
+  }
+
+  /* 이 칸을 지금 건드리면 안 되는가?
+     ① 사용자가 그 칸에 커서를 두고 있거나 ② 저장이 아직 끝나지 않았거나 */
+  function busy(el, key) {
+    return document.activeElement === el || pending.has(key);
   }
 
   /* ── 원격 변경 반영 ─────────────────────────────────────
@@ -589,10 +602,12 @@ export default async function court(outlet) {
       if (mark) mark.dataset.level = s.level || 'none';
 
       const picked = root.querySelector(`input[name="lv-${h}"][value="${s.level}"]`);
-      if (picked && document.activeElement?.name !== `lv-${h}`) picked.checked = true;
+      if (picked && document.activeElement?.name !== `lv-${h}` && !pending.has(`lv-${h}`)) {
+        picked.checked = true;
+      }
 
       const sr = root.querySelector(`#sr-${h}`);
-      if (sr && document.activeElement !== sr) sr.value = s.reason ?? '';
+      if (sr && !busy(sr, `sr-${h}`)) sr.value = s.reason ?? '';
     }
 
     // 2단계는 네 가설을 모두 검토한 뒤에 열립니다.
@@ -604,9 +619,12 @@ export default async function court(outlet) {
       choose.querySelectorAll('input').forEach((i) => (i.disabled = readOnly || !ready));
     }
     if (help) {
+      /* 숫자만 보여주면 "무엇이 남았는지"를 학생이 위로 올라가 찾아야 합니다.
+         남은 가설 이름을 그대로 적어 줍니다. */
+      const left = HYPS.filter((h) => !v.screen?.[h]?.level).map((h) => hypById(h)?.name ?? h);
       help.textContent = ready
         ? '네 가설을 모두 검토했습니다. 가장 잘 설명하는 하나를 고르세요.'
-        : `네 가설을 모두 검토하면 여기서 하나를 고를 수 있습니다. (${screened} / 4)`;
+        : `아직 판정하지 않은 가설이 있습니다 — ${left.join(', ')} (${screened} / ${HYPS.length})`;
     }
 
     const chosenInput = root.querySelector(`input[name="chosen"][value="${v.chosen}"]`);
@@ -623,7 +641,7 @@ export default async function court(outlet) {
       if (!slider) continue;
 
       const val = v.scores?.[id];
-      if (document.activeElement !== slider && document.activeElement !== hold) {
+      if (!busy(slider, `sc-${id}`) && document.activeElement !== hold) {
         const held = val === HOLD;
         const unset = val === null || val === undefined;
         hold.checked = held;
@@ -631,11 +649,11 @@ export default async function court(outlet) {
         if (!readOnly) slider.disabled = held;
         out.textContent = held ? '보류' : unset ? '—' : String(val);
       }
-      if (document.activeElement !== reason) reason.value = v.reasons?.[id] ?? '';
+      if (!busy(reason, `rs-${id}`)) reason.value = v.reasons?.[id] ?? '';
     }
 
     const counter = root.querySelector('#ct-counter');
-    if (counter && document.activeElement !== counter) counter.value = v.counter ?? '';
+    if (counter && !busy(counter, 'counter')) counter.value = v.counter ?? '';
 
     const box = root.querySelector('#ct-rebuttals');
     if (box) {
