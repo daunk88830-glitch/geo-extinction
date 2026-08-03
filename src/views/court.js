@@ -464,7 +464,9 @@ export default async function court(outlet) {
 
     // 2단계 — 가설 선택
     root.querySelectorAll('input[name="chosen"]').forEach((r) => {
-      r.addEventListener('change', () => savePatch(selectedId, { chosen: r.value }));
+      /* 이 저장이 실패하면 2단계가 열리지 않습니다.
+         조용히 넘어가면 학생은 왜 안 열리는지 알 수 없으므로 saveNow 를 씁니다. */
+      r.addEventListener('change', () => saveNow({ chosen: r.value }));
     });
 
     // 2단계 — 기준 판정
@@ -532,7 +534,7 @@ export default async function court(outlet) {
       ? ai.rebuttals
       : (cell?.rebuttalSeeds ?? []).slice(0, 2).map((t) => ({ text: t, source: 'seed' }));
 
-    await savePatch(selectedId, { rebuttals });
+    await saveNow({ rebuttals });
     btn.disabled = false;
     btn.textContent = '반론 다시 받기';
     if (!ai) flash('준비된 반론으로 진행합니다.');
@@ -552,40 +554,47 @@ export default async function court(outlet) {
     const noReason = CRITERIA.filter((c) => !(v.reasons?.[c] || '').trim());
     if (noReason.length) return flash(`근거를 쓰지 않은 기준이 ${noReason.length}개 있습니다.`);
 
-    const r = await savePatch(selectedId, { status: 'submitted' });
-    if (r === 'ok') {
+    // saveNow 가 실패 사유를 이미 띄웁니다. 성공했을 때만 화면을 다시 그립니다.
+    if ((await saveNow({ status: 'submitted' })) === 'ok') {
       flash('제출했습니다.');
       renderDetail();
-    } else flash('제출에 실패했습니다.');
+    }
   }
 
-  /* 타이핑이 멈춘 뒤에만 씁니다. 글자마다 쓰면 쓰기가 폭주합니다.
-     저장이 실패하면 반드시 알립니다 — 조용히 실패하면 학생은 저장된 줄 알고
-     계속 진행하다가 다음 단계가 안 열리는 이유를 알 수 없습니다. */
+  /* 이 화면의 모든 저장이 지나가는 문.
+   *
+   * 거부됐을 때 가장 흔한 원인은 "이 반 명단에 내가 없는 것"입니다.
+   * (다른 반을 골랐거나, 세션 이름이 바뀌었거나, 그 반에 처음 들어왔거나)
+   * 학생이 무엇을 잘못한 게 아니므로, 오류를 보여주기 전에 명단에 다시
+   * 올리고 한 번 재시도합니다.
+   *
+   * 실패는 반드시 화면에 남깁니다. 조용히 실패하면 학생은 저장된 줄 알고
+   * 계속 진행하다가 다음 단계가 안 열리는 이유를 알 수 없습니다.
+   */
+  async function saveNow(partial) {
+    let r = await savePatch(selectedId, partial);
+    if (r === 'denied') {
+      await ensureEnrolled();
+      r = await savePatch(selectedId, partial);
+    }
+    if (r === 'denied') {
+      flash('저장할 권한이 없습니다. 홈으로 가서 반과 모둠을 다시 확인해 주세요.');
+    } else if (r === 'error') {
+      flash('저장하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.');
+    }
+    return r;
+  }
+
+  /* 타이핑이 멈춘 뒤에만 씁니다. 글자마다 쓰면 쓰기가 폭주합니다. */
   function queueSave(key, partial) {
     clearTimeout(timers.get(key));
     pending.add(key);
     timers.set(
       key,
       setTimeout(async () => {
-        let r = await savePatch(selectedId, partial);
-
-        /* 거부됐을 때 흔한 원인은 "이 반 명단에 내가 없는 것"입니다.
-           (다른 반을 골랐거나, 세션 이름이 바뀌었거나)
-           명단에 다시 올리고 한 번만 재시도합니다. 학생이 무엇을 잘못한 게
-           아니므로 오류를 보여주기 전에 앱이 스스로 고쳐 봅니다. */
-        if (r === 'denied') {
-          await ensureEnrolled();
-          r = await savePatch(selectedId, partial);
-        }
-
+        await saveNow(partial);
         // 서버에 닿은 뒤에야 잠금을 풉니다. 그전까지 이 칸은 화면 갱신에서 빠집니다.
         pending.delete(key);
-        if (r === 'denied') {
-          flash('저장할 권한이 없습니다. 홈으로 가서 반과 모둠을 다시 확인해 주세요.');
-        } else if (r === 'error') {
-          flash('저장하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.');
-        }
       }, SAVE_DELAY)
     );
   }
