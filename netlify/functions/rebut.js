@@ -38,20 +38,15 @@ const SYSTEM = `너는 고등학교 1학년 통합과학 수업의 "반론 검�
 const SCHEMA = {
   type: 'object',
   properties: {
-    /* 길이를 스키마로 제한합니다.
-       교실에서 이 응답을 기다리는 시간이 곧 수업 시간이라, 출력이 길어지면
-       그만큼 느려집니다. 게다가 반론이 길면 고1이 읽다가 흐름을 놓칩니다.
-       각 220자 이내가 화면에서도 읽기 좋은 길이입니다.
-
-       개수는 minItems 로 못박지 않습니다 — 이 API 는 minItems 에 0 이나 1
-       외의 값을 받지 않아서, 2 를 넣으면 요청 자체가 400 으로 거부됩니다.
-       개수는 위 지시문에서 "정확히 2개"로 요구하고, maxItems 로 상한만 둡니다. */
+    /* 개수와 길이는 스키마가 아니라 지시문(SYSTEM)으로만 통제합니다.
+       이 API 의 json_schema 는 배열에 minItems(0·1 외)·maxItems 를 받지 않고,
+       넣으면 요청 자체가 400 으로 거부되어 함수가 죽습니다.
+       스키마는 "모양"만 정하고, "얼마나"는 지시문에 맡깁니다. */
     rebuttals: {
       type: 'array',
-      maxItems: 2,
       items: {
         type: 'object',
-        properties: { text: { type: 'string', maxLength: 220 } },
+        properties: { text: { type: 'string' } },
         required: ['text'],
         additionalProperties: false,
       },
