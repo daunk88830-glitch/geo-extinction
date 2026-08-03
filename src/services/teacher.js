@@ -5,8 +5,11 @@ import { auth, db, configured, getSessionId } from '../firebase.js';
 /* 교사 대시보드용 인증과 구독.
  *
  * 서비스 계정 키를 쓰지 않습니다. 교사도 그냥 Firebase 사용자이고,
- * 보안 규칙의 isTeacher() 가 sessions/{세션}/teachers/{uid} 문서 존재를
- * 확인해 권한을 줍니다. 그 문서는 콘솔에서만 만들 수 있습니다.
+ * 보안 규칙의 isTeacher() 가 최상위 teachers/{uid} 문서 존재를 확인해
+ * 권한을 줍니다. 그 문서는 콘솔에서만 만들 수 있습니다.
+ *
+ * 반(세션) 안이 아니라 최상위에 두는 이유: 반이 9개인데 세션마다 교사
+ * 문서를 만들면 9번 등록해야 합니다. 교사는 반과 무관하게 교사입니다.
  *
  * 규칙이 quizAnswers 에 allow write 를 주지 않으므로, 대시보드는
  * 코드가 아니라 서버 규칙 차원에서 읽기 전용입니다.
