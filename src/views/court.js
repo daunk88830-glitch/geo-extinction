@@ -435,17 +435,30 @@ export default async function court(outlet) {
 
   /* ── 입력 연결 ──────────────────────────────────────────── */
   function wireDetail(ev, v0, readOnly) {
-    // 1단계
+    /* 1단계.
+     *
+     * 판정과 근거를 따로 보내면 안 됩니다. 둘 다 screen.{가설} 아래에 있어서,
+     * 두 저장이 겹치면 나중에 도착한 쪽이 앞의 것을 지웁니다.
+     * (근거를 치는 중에 판정 버튼을 누르면 근거가 사라지던 원인)
+     *
+     * 그래서 저장 단위를 "가설 하나"로 잡고, 보낼 때마다 화면에서 판정과 근거를
+     * 함께 읽어 통째로 보냅니다. 어느 쪽을 건드리든 payload 가 같은 모양이라
+     * 순서가 엇갈려도 서로를 지우지 않습니다.
+     * 가설끼리는 여전히 필드가 나뉘어 있어 모둠원이 다른 가설을 맡아도 충돌하지 않습니다.
+     */
     for (const h of HYPS) {
-      root.querySelectorAll(`input[name="lv-${h}"]`).forEach((r) => {
-        r.addEventListener('change', () => {
-          queueSave(`lv-${h}`, { screen: { [h]: { level: r.value } } });
+      const saveHyp = () => {
+        const picked = root.querySelector(`input[name="lv-${h}"]:checked`);
+        const sr = root.querySelector(`#sr-${h}`);
+        queueSave(`h-${h}`, {
+          screen: { [h]: { level: picked?.value ?? null, reason: sr?.value ?? '' } },
         });
+      };
+
+      root.querySelectorAll(`input[name="lv-${h}"]`).forEach((r) => {
+        r.addEventListener('change', saveHyp);
       });
-      const sr = root.querySelector(`#sr-${h}`);
-      sr?.addEventListener('input', () => {
-        queueSave(`sr-${h}`, { screen: { [h]: { reason: sr.value } } });
-      });
+      root.querySelector(`#sr-${h}`)?.addEventListener('input', saveHyp);
     }
 
     // 2단계 — 가설 선택
@@ -593,22 +606,35 @@ export default async function court(outlet) {
     if (!v) return;
 
     // 1단계
-    let screened = 0;
+    const unscreened = [];
     for (const h of HYPS) {
       const s = v.screen?.[h] || {};
-      if (s.level) screened++;
-      const mark = root.querySelector(`#mk-${h}`);
-      if (mark) mark.textContent = s.level ? levelLabel(s.level) : '미검토';
-      if (mark) mark.dataset.level = s.level || 'none';
 
-      const picked = root.querySelector(`input[name="lv-${h}"][value="${s.level}"]`);
-      if (picked && document.activeElement?.name !== `lv-${h}` && !pending.has(`lv-${h}`)) {
-        picked.checked = true;
+      /* 저장이 아직 서버에 닿지 않았으면 화면의 값이 서버 값보다 최신입니다.
+         그때는 화면을 서버로 되돌리지 않고, 진행 상황도 화면 기준으로 셉니다.
+         (안 그러면 방금 고른 판정이 잠깐 「미검토」로 되돌아가 보입니다) */
+      const waiting = pending.has(`h-${h}`);
+      const level = waiting
+        ? (root.querySelector(`input[name="lv-${h}"]:checked`)?.value ?? null)
+        : (s.level ?? null);
+
+      if (!level) unscreened.push(hypById(h)?.name ?? h);
+
+      const mark = root.querySelector(`#mk-${h}`);
+      if (mark) {
+        mark.textContent = level ? levelLabel(level) : '미검토';
+        mark.dataset.level = level || 'none';
       }
 
+      if (waiting) continue;
+
+      const picked = root.querySelector(`input[name="lv-${h}"][value="${s.level}"]`);
+      if (picked && document.activeElement?.name !== `lv-${h}`) picked.checked = true;
+
       const sr = root.querySelector(`#sr-${h}`);
-      if (sr && !busy(sr, `sr-${h}`)) sr.value = s.reason ?? '';
+      if (sr && document.activeElement !== sr) sr.value = s.reason ?? '';
     }
+    const screened = HYPS.length - unscreened.length;
 
     // 2단계는 네 가설을 모두 검토한 뒤에 열립니다.
     const ready = screened === HYPS.length;
@@ -621,10 +647,9 @@ export default async function court(outlet) {
     if (help) {
       /* 숫자만 보여주면 "무엇이 남았는지"를 학생이 위로 올라가 찾아야 합니다.
          남은 가설 이름을 그대로 적어 줍니다. */
-      const left = HYPS.filter((h) => !v.screen?.[h]?.level).map((h) => hypById(h)?.name ?? h);
       help.textContent = ready
         ? '네 가설을 모두 검토했습니다. 가장 잘 설명하는 하나를 고르세요.'
-        : `아직 판정하지 않은 가설이 있습니다 — ${left.join(', ')} (${screened} / ${HYPS.length})`;
+        : `아직 판정하지 않은 가설이 있습니다 — ${unscreened.join(', ')} (${screened} / ${HYPS.length})`;
     }
 
     const chosenInput = root.querySelector(`input[name="chosen"][value="${v.chosen}"]`);
