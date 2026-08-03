@@ -32,8 +32,15 @@ service cloud.firestore {
         && id[uid().size():uid().size() + 1] == '_';
     }
 
+    /* 내 모둠 번호. 명단에 내가 없으면 -1 을 돌려줍니다.
+       없는 문서에 .data 를 쓰면 규칙 평가 자체가 오류로 끝나서,
+       어떤 조건 때문에 막혔는지 알 수 없는 permission-denied 가 됩니다.
+       -1 로 두면 "모둠이 안 맞아서 막혔다"로 깔끔하게 떨어지고,
+       앱이 명단에 다시 등록한 뒤 재시도할 수 있습니다. */
     function myGroup(sid) {
-      return get(/databases/$(database)/documents/sessions/$(sid)/students/$(uid())).data.groupId;
+      return exists(/databases/$(database)/documents/sessions/$(sid)/students/$(uid()))
+        ? get(/databases/$(database)/documents/sessions/$(sid)/students/$(uid())).data.groupId
+        : -1;
     }
 
     /* 교사인지. 최상위 teachers/{uid} 문서가 있으면 교사입니다.

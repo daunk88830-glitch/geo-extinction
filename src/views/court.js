@@ -16,6 +16,7 @@ import { fetchRebuttals } from '../services/ai.js';
 import { MECHANISM } from '../data/mechanisms.js';
 import { eventStrip, evidenceBadge } from '../components/courtArt.js';
 import { configured } from '../firebase.js';
+import { ensureEnrolled } from '../services/auth.js';
 import * as store from '../store.js';
 
 /* 대멸종의 원인을 찾아보자! (가설 검증)
@@ -567,11 +568,21 @@ export default async function court(outlet) {
     timers.set(
       key,
       setTimeout(async () => {
-        const r = await savePatch(selectedId, partial);
+        let r = await savePatch(selectedId, partial);
+
+        /* 거부됐을 때 흔한 원인은 "이 반 명단에 내가 없는 것"입니다.
+           (다른 반을 골랐거나, 세션 이름이 바뀌었거나)
+           명단에 다시 올리고 한 번만 재시도합니다. 학생이 무엇을 잘못한 게
+           아니므로 오류를 보여주기 전에 앱이 스스로 고쳐 봅니다. */
+        if (r === 'denied') {
+          await ensureEnrolled();
+          r = await savePatch(selectedId, partial);
+        }
+
         // 서버에 닿은 뒤에야 잠금을 풉니다. 그전까지 이 칸은 화면 갱신에서 빠집니다.
         pending.delete(key);
         if (r === 'denied') {
-          flash('저장이 거부되었습니다. 이 사건을 맡은 모둠만 수정할 수 있습니다.');
+          flash('저장할 권한이 없습니다. 홈으로 가서 반과 모둠을 다시 확인해 주세요.');
         } else if (r === 'error') {
           flash('저장하지 못했습니다. 네트워크를 확인하고 다시 시도해 주세요.');
         }

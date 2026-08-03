@@ -48,6 +48,44 @@ export async function joinClass({ studentId, name, groupId }) {
   return uid;
 }
 
+/* 지금 반의 명단에 내가 올라 있는지 확인하고, 없으면 올립니다.
+ *
+ * 왜 필요한가: 보안 규칙은 sessions/{반}/students/{uid} 를 읽어 모둠 번호를
+ * 확인합니다. 이 문서가 지금 반에 없으면 규칙 검사가 실패해서 표시·판정·평가가
+ * 전부 permission-denied 로 막힙니다. 그런데 화면은 브라우저에 저장된 모둠
+ * 번호를 믿기 때문에 멀쩡해 보입니다 — 입력은 되는데 저장만 안 되는,
+ * 수업 중에 가장 알아채기 어려운 형태의 고장입니다.
+ *
+ * 이 문서가 없어지는 경우는 생각보다 많습니다.
+ *   · 학생이 다른 반을 골랐을 때
+ *   · 세션 이름 규칙이 바뀌었을 때(학기 접두사 변경 등)
+ *   · 브라우저 저장소는 남아 있는데 그 반에 처음 들어올 때
+ * 그래서 로그인 상태가 복구될 때마다 조용히 다시 올려 둡니다. */
+export async function ensureEnrolled() {
+  if (!configured) return;
+
+  const user = auth.currentUser;
+  const u = store.get('user');
+  if (!user || user.isAnonymous === false) return;
+  if (!u.name || !u.groupId) return;   // 아직 홈에서 입력하지 않은 상태
+
+  try {
+    await setDoc(
+      doc(db, 'sessions', getSessionId(), 'students', user.uid),
+      {
+        uid: user.uid,
+        studentId: u.studentId ?? '',
+        name: u.name,
+        groupId: u.groupId,
+        joinedAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+  } catch (e) {
+    console.warn('[auth] 명단 등록 실패:', e.code || e.message);
+  }
+}
+
 /** 새로고침 후 이미 등록된 학생의 uid 를 조용히 복구합니다.
  *  화면을 막지 않도록 실패해도 그냥 넘어갑니다. */
 export function restoreAuth() {
@@ -62,6 +100,8 @@ export function restoreAuth() {
     if (user) {
       store.patch('user', { uid: user.uid });
       store.saveUserToStorage();
+      // uid 만 되살리면 지금 반의 명단에는 내가 없을 수 있습니다.
+      await ensureEnrolled();
       return;
     }
     // 로컬에는 학생 정보가 있는데 로그인 세션만 끊긴 경우 → 다시 로그인
