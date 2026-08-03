@@ -324,6 +324,8 @@ body {
 
 /* ── 흐름도 ─────────────────────────────────────────────── */
 .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.flow--2 { grid-template-columns: 1fr 1fr; gap: 24px; }
+.flow--2 .step__l { font-size: 16px; line-height: 1.85; }
 .step {
   padding: 20px 22px;
   background: var(--surface-2);
@@ -333,6 +335,8 @@ body {
   position: relative;
 }
 .step:nth-child(3) { border-top-color: var(--rust); }
+/* 2단 구성일 때는 두 번째 칸이 "왜"(원인 판정)라 산화철 색을 씁니다 */
+.flow--2 .step:nth-child(2) { border-top-color: var(--rust); }
 .step__n {
   font-family: var(--mono);
   font-size: 12px;
@@ -465,14 +469,14 @@ body {
   <section class="slide cover" data-sec="" data-time="0:15">
     <p class="cover__eyebrow">통합과학2 · 변화와 다양성</p>
     <h1 class="cover__title">대멸종의 원인을 찾아라</h1>
-    <p class="cover__sub">고생물학 데이터로 검증하는 다섯 번의 대멸종 — 고1 3차시 탐구 수업</p>
+    <p class="cover__sub">고생물학 데이터로 검증하는 다섯 번의 대멸종 — 고1 2차시 탐구 수업</p>
     <dl class="cover__foot">
       <div><dt>웹 애플리케이션</dt><dd>geo-extinction.netlify.app</dd></div>
       <div><dt>개발</dt><dd>Vanilla JavaScript · Firebase · Netlify</dd></div>
       <div><dt>발표</dt><dd>10분</dd></div>
     </dl>
     <div class="notes" hidden>
-      <p>안녕하십니까. 고등학교 1학년 통합과학2 「변화와 다양성」 단원의 지질시대와 대멸종을 다루는 3차시 탐구 수업과, 그 수업에서 쓰는 웹 애플리케이션을 소개하겠습니다.</p>
+      <p>안녕하십니까. 고등학교 1학년 통합과학2 「변화와 다양성」 단원의 지질시대와 대멸종을 다루는 2차시 탐구 수업과, 그 수업에서 쓰는 웹 애플리케이션을 소개하겠습니다.</p>
       <p>먼저 이 단원이 왜 문제인지부터 말씀드리겠습니다.</p>
     </div>
   </section>
@@ -581,48 +585,43 @@ body {
     </div>
   </section>
 
-  <!-- ─────────── 5 · 3차시 흐름 ─────────── -->
+  <!-- ─────────── 5 · 2차시 흐름 ─────────── -->
   <section class="slide" data-sec="설계" data-time="0:40">
     <div class="meta"><span class="meta__sec">설계</span><span class="meta__time">0:40</span></div>
-    <h2 class="h1">3차시 흐름</h2>
+    <h2 class="h1">2차시 흐름 — 언제 · 왜</h2>
     <div class="fill">
-      <div class="flow">
+      <div class="flow flow--2">
         <div class="step">
-          <div class="step__n">1차시 · 진단과 탐색</div>
-          <p class="step__t">무엇을 안다고 생각하는가</p>
+          <div class="step__n">1차시 · 50분</div>
+          <p class="step__t">대멸종은 <span class="hl-t">언제</span> 일어났는가</p>
           <ul class="step__l">
-            <li>선개념 5문항 <b>정답 미공개</b></li>
-            <li>스크롤로 지질시대 탐색</li>
-            <li>시대별 환경·생물 카드뉴스</li>
+            <li>선개념 5문항 — <b>정답 미공개</b> (8분)</li>
+            <li>스크롤로 지질시대 규모 체감 (12분)</li>
+            <li>그래프 4종 판독 → <b>구간을 직접 표시</b> (14분)</li>
+            <li>학급 히트맵과 비교 → 정답 공개 (16분)</li>
           </ul>
         </div>
         <div class="step">
-          <div class="step__n">2차시 · 데이터 분석</div>
-          <p class="step__t">대멸종을 직접 찾는다</p>
+          <div class="step__n">2차시 · 50분</div>
+          <p class="step__t">대멸종은 <span class="hl">왜</span> 일어났는가</p>
           <ul class="step__l">
-            <li>그래프 4종 판독</li>
-            <li><b>구간을 직접 표시</b></li>
-            <li>학급 히트맵과 비교 → 정답 공개</li>
-          </ul>
-        </div>
-        <div class="step">
-          <div class="step__n">3차시 · 가설 검증</div>
-          <p class="step__t">원인을 증거로 판정한다</p>
-          <ul class="step__l">
-            <li>모둠별 사건 1개 담당</li>
-            <li>네 가설 판정 → 반론 → 재반박</li>
-            <li>발표 · 형성평가</li>
+            <li>모둠별 사건 1개 선점 (3분)</li>
+            <li>1단계 — 네 가설 모두 판정 (15분)</li>
+            <li>2단계 — 기준 4개 → 반론 → 재반박 (17분)</li>
+            <li>모둠 발표 · 형성평가 (15분)</li>
           </ul>
         </div>
       </div>
-      <div class="quote" style="font-size:19px">
-        평가는 <span class="hl">기각한 가설과 그 근거</span>를 중심으로 봅니다.
-        기각했다고 감점하지 않습니다 — 근거의 구체성이 평가 대상입니다.
+      <div class="quote" style="font-size:18px">
+        1차시에 학생이 <b>직접 찾아낸 다섯 구간</b>이 2차시에 모둠별로 나눠 맡는 사건이 됩니다.
+        평가는 <span class="hl">기각한 가설과 그 근거</span>를 중심으로 봅니다 —
+        기각했다고 감점하지 않습니다.
       </div>
     </div>
     <div class="rail"><span class="rail__n">05</span><span class="rail__bar"><i class="rail__fill"></i></span><span>수업 흐름</span></div>
     <div class="notes" hidden>
-      <p>3차시 구성입니다. 1차시는 진단과 탐색, 2차시는 데이터에서 대멸종을 직접 찾기, 3차시는 원인 가설 검증입니다.</p>
+      <p>2차시 구성입니다. 1차시는 "언제", 2차시는 "왜"입니다.</p>
+      <p>1차시에 선개념 진단부터 데이터 탐구까지 하고, 학생이 대멸종 다섯 구간을 직접 찾아냅니다. 그 다섯 구간이 2차시에 모둠별로 나눠 맡는 사건이 됩니다. 그래서 두 차시가 하나의 탐구로 이어집니다.</p>
       <p>평가에서 중요한 점은, 기각했다고 감점하지 않는다는 것입니다. 근거를 얼마나 구체적으로 썼는지를 봅니다.</p>
     </div>
   </section>
