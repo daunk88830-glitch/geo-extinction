@@ -1,6 +1,7 @@
 import { loadHypotheses, loadDiversity, loadClimate } from '../data/loader.js';
 import {
   claimEvent,
+  eventOfGroup,
   savePatch,
   subscribeVerdicts,
   emptyVerdict,
@@ -90,7 +91,11 @@ export default async function court(outlet) {
       </header>
 
       <section class="ct__events wrap">
-        ${events.map((ev) => eventCard(ev, locks[ev.id], byEvent[ev.id], myGroup)).join('')}
+        ${events
+          .map((ev) =>
+            eventCard(ev, locks[ev.id], byEvent[ev.id], myGroup, eventOfGroup(locks, myGroup))
+          )
+          .join('')}
       </section>
 
       <div class="ct__groupKey">
@@ -123,8 +128,10 @@ export default async function court(outlet) {
     });
   }
 
-  function eventCard(ev, lock, verdict, myGroup) {
+  function eventCard(ev, lock, verdict, myGroup, heldId) {
     const mine = lock && lock.groupId === myGroup;
+    // 우리 모둠이 이미 다른 사건을 맡았다면 빈 사건도 열람만 됩니다.
+    const viewOnly = (lock && !mine) || (!lock && heldId && heldId !== ev.id);
     const done = verdict?.status === 'submitted';
     const screened = HYPS.filter((h) => verdict?.screen?.[h]?.level).length;
 
@@ -145,7 +152,7 @@ export default async function court(outlet) {
           <em>${esc(ev.studentEra)}</em>
         </span>
         <span class="ct__eventState">${esc(state)}</span>
-        <span class="ct__eventGo">${lock && !mine ? '열람' : mine ? '이어서 하기' : '맡기'} →</span>
+        <span class="ct__eventGo">${viewOnly ? '열람' : mine ? '이어서 하기' : '맡기'} →</span>
       </button>`;
   }
 
@@ -252,7 +259,7 @@ export default async function court(outlet) {
             <div id="ct-dataMount"></div>
           </details>
 
-          ${lock ? stage1(ev, v, readOnly) : claimPrompt()}
+          ${lock ? stage1(ev, v, readOnly) : claimPrompt(eventOfGroup(locks, myGroup), myGroup)}
           ${lock ? stage2(ev, v, readOnly) : ''}
 
           <p class="ct__msg" id="ct-msg" role="status"></p>
@@ -303,11 +310,22 @@ export default async function court(outlet) {
     syncDetail();
   }
 
-  function claimPrompt() {
+  function claimPrompt(heldId, myGroup) {
+    if (heldId) {
+      const held = events.find((e) => e.id === heldId);
+      return `
+      <section class="ct__sec ct__claimbox">
+        <p>이 사건은 아직 아무 모둠도 맡지 않았습니다.</p>
+        <p>우리 모둠(${myGroup}모둠)은 이미 <b>${esc(held?.studentLabel ?? '다른 사건')}</b>을(를) 맡았습니다.
+        한 모둠은 사건 하나만 맡을 수 있어요. 이 사건은 다른 모둠을 위해 남겨 두세요.</p>
+      </section>`;
+    }
     return `
       <section class="ct__sec ct__claimbox">
         <p>이 사건은 아직 아무 모둠도 맡지 않았습니다.</p>
-        <button class="btn" id="ct-claim" type="button">우리 모둠이 맡기</button>
+        <p>한 모둠은 사건 <b>하나만</b> 맡을 수 있고, 맡은 뒤에는 바꿀 수 없습니다.
+        모둠원과 상의한 뒤 눌러 주세요.</p>
+        <button class="btn" id="ct-claim" type="button">우리 모둠(${myGroup}모둠)이 맡기</button>
       </section>`;
   }
 
@@ -778,8 +796,12 @@ export default async function court(outlet) {
   }
 
   async function onClaim() {
+    const ev = events.find((e) => e.id === selectedId);
+    const g = store.get('user').groupId;
+    if (!confirm(`${g}모둠이 「${ev?.studentLabel ?? ''}」을(를) 맡을까요?\n한 번 맡으면 다른 사건으로 바꿀 수 없습니다.`)) return;
     const r = await claimEvent(selectedId);
-    if (r === 'taken') flash('방금 다른 모둠이 먼저 맡았습니다. 다른 사건을 골라 주세요.');
+    if (r === 'has-one') flash('우리 모둠은 이미 다른 사건을 맡았습니다. 한 모둠은 사건 하나만 맡을 수 있어요.');
+    else if (r === 'taken') flash('방금 다른 모둠이 먼저 맡았습니다. 다른 사건을 골라 주세요.');
     else if (r === 'error') flash('맡기에 실패했습니다. 네트워크를 확인해 주세요.');
     else if (r === 'no-doc') flash('사건은 맡았지만 판정 문서를 만들지 못했습니다. 새로고침해 주세요.');
     renderDetail();
