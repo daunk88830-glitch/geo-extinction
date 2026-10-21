@@ -58,9 +58,20 @@ export function emptyVerdict(eventId, groupId) {
   };
 }
 
-/** 사건을 점유합니다. 이미 다른 모둠이 가져갔으면 'taken'. */
+/** 이 모둠이 이미 맡은 사건 id. 없으면 null. */
+export function eventOfGroup(locks, groupId) {
+  const hit = Object.entries(locks || {}).find(([, l]) => l && l.groupId === groupId);
+  return hit ? hit[0] : null;
+}
+
+/** 사건을 점유합니다.
+ *  이미 다른 모둠이 가져갔으면 'taken',
+ *  우리 모둠이 이미 다른 사건을 맡았으면 'has-one'.
+ *  (한 모둠이 사건 두 개를 가져가면 다른 모둠이 맡을 사건이 없어집니다) */
 export async function claimEvent(eventId) {
   const u = store.get('user');
+  const held = eventOfGroup(store.get('verdicts').locks, u.groupId);
+  if (held && held !== eventId) return 'has-one';
 
   if (!configured || !u.uid) {
     const locks = { ...store.get('verdicts').locks };
