@@ -1,4 +1,4 @@
-import { doc, collection, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, collection, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { db, configured, getSessionId } from '../firebase.js';
 import * as store from '../store.js';
 
@@ -105,6 +105,29 @@ export async function saveAnswer(item, payload) {
     console.error('[quiz] 저장 실패:', e);
     return e.code === 'permission-denied' ? 'denied' : 'error';
   }
+}
+
+/** 내가 이미 낸 답안을 불러옵니다. 새로고침해도 고른 답과 채점 결과가 다시 보이게 하려고 씁니다.
+ *  보안 규칙상 학생은 자기 문서({uid}_{문항id})만 get 할 수 있으므로 문항마다 하나씩 읽습니다.
+ *  돌려주는 값: { 문항id: 저장된 답안 } */
+export async function loadMyAnswers(items) {
+  const u = store.get('user');
+  if (!configured || !u.uid) return { ...store.get('quiz').answers };
+
+  const out = {};
+  await Promise.all(
+    items.map(async (it) => {
+      try {
+        const snap = await getDoc(
+          doc(collection(db, 'sessions', getSessionId(), 'quizAnswers'), `${u.uid}_${it.id}`)
+        );
+        if (snap.exists()) out[it.id] = snap.data();
+      } catch (e) {
+        console.warn('[quiz] 지난 답안을 읽지 못했습니다:', it.id, e.code || e.message);
+      }
+    })
+  );
+  return out;
 }
 
 /** 오답일 때 돌아갈 화면 */

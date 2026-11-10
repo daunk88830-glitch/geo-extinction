@@ -1,4 +1,4 @@
-import { loadQuiz, saveAnswer, sectionLink } from '../services/quiz.js';
+import { loadQuiz, saveAnswer, sectionLink, loadMyAnswers } from '../services/quiz.js';
 import { fetchFeedback } from '../services/ai.js';
 import { QUESTIONS, CHOICES } from '../data/preconceptions.js';
 import { saveResponses, subscribeResponses } from '../services/preconceptions.js';
@@ -46,6 +46,7 @@ export default async function quiz(outlet) {
   `;
 
   const cleanups = [];
+  const restorers = new Map();   // 문항id → 저장된 답안을 화면에 되살리는 함수
   let msgTimer = 0;
 
   function flash(t) {
@@ -60,11 +61,8 @@ export default async function quiz(outlet) {
     const box = outlet.querySelector(`#q-${it.id}`);
     const result = outlet.querySelector(`#r-${it.id}`);
 
-    const onPick = async (e) => {
-      const btn = e.target.closest('[data-choice]');
-      if (!btn || box.dataset.done) return;
-
-      const picked = Number(btn.dataset.choice);
+    /* 고른 답과 채점 결과를 화면에 표시합니다. 새로고침 뒤 복원할 때도 씁니다. */
+    const show = (picked) => {
       const correct = picked === it.answer;
       box.dataset.done = '1';
 
@@ -83,6 +81,19 @@ export default async function quiz(outlet) {
         ${it.explain ? `<p>${esc(it.explain)}</p>` : ''}
         ${link ? `<a class="qz__link" href="${link.href}">${link.label} →</a>` : ''}
       `;
+      return correct;
+    };
+    restorers.set(it.id, (a) => {
+      const picked = Number(a?.raw);
+      if (picked && !box.dataset.done) show(picked);
+    });
+
+    const onPick = async (e) => {
+      const btn = e.target.closest('[data-choice]');
+      if (!btn || box.dataset.done) return;
+
+      const picked = Number(btn.dataset.choice);
+      const correct = show(picked);
 
       const r = await saveAnswer(it, { raw: picked, correct });
       if (r === 'denied') flash('답안 저장 권한이 없습니다. 보안 규칙을 확인해 주세요.');
@@ -98,6 +109,20 @@ export default async function quiz(outlet) {
     const area = outlet.querySelector(`#t-${it.id}`);
     const btn = outlet.querySelector(`#s-${it.id}`);
     const result = outlet.querySelector(`#r-${it.id}`);
+
+    restorers.set(it.id, (a) => {
+      if (!a?.raw || area.value.trim()) return;
+      area.value = a.raw;
+      btn.textContent = '다시 제출';
+      result.hidden = false;
+      if (a.feedback) {
+        result.className = 'qz__result qz__result--fb';
+        result.innerHTML = feedbackHtml(a.feedback);
+      } else {
+        result.className = 'qz__result qz__result--ok';
+        result.innerHTML = '<b>제출했습니다</b><p>저장된 답안을 불러왔습니다.</p>';
+      }
+    });
 
     const onSubmit = async () => {
       const raw = area.value.trim();
@@ -136,6 +161,21 @@ export default async function quiz(outlet) {
     btn.addEventListener('click', onSubmit);
     cleanups.push(() => btn.removeEventListener('click', onSubmit));
   }
+
+  /* ── 새로고침해도 내 답안이 다시 보이게 ───────────────────
+     답안은 서버에 저장되어 있으므로 다시 들어오면 불러와 화면에 채웁니다.
+     새로고침 직후에는 로그인이 조금 늦게 복원되므로, uid 가 생길 때까지 기다립니다. */
+  let restored = false;
+  async function restore() {
+    if (restored) return;
+    if (configured && !store.get('user').uid) return;
+    restored = true;
+    const mine = await loadMyAnswers(items);
+    for (const [id, a] of Object.entries(mine)) restorers.get(id)?.(a);
+  }
+  const unsubUser = store.subscribe('user', restore);
+  cleanups.push(unsubUser);
+  restore();
 
   /* ── 사후 선개념 확인 ───────────────────────────────────
      수업 전에 답했던 다섯 문항을 그대로 다시 묻고, 두 답을 나란히 보여줍니다.
