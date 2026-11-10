@@ -10,7 +10,7 @@ import { GROUPS } from '../data/groups.js';
  * 보안 규칙이 그 uid 를 검사해 "남의 데이터는 건드릴 수 없다"를 보장합니다.
  */
 
-const CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+const CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 export default function home(outlet) {
   const u = store.get('user');

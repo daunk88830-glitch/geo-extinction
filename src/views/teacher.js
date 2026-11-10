@@ -30,7 +30,7 @@ export default async function teacher(outlet) {
   let clustering = false;
   let data = { students: [], claims: [], answers: [] };
 
-  const CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => `${n}반`);
+  const CLASSES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => `${n}반`);
 
   /* 반을 바꾸면 구독을 끊고 새 반으로 다시 붙입니다.
      세션이 곧 반이라 이 한 번으로 명단·판정·답안이 모두 그 반 것으로 바뀝니다. */

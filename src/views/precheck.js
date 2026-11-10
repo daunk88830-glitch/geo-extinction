@@ -23,11 +23,20 @@ export default function precheck(outlet) {
   const unsubStore = store.subscribe('preconceptions', render);
 
   let submitting = false;
+  let mode = null;
 
+  /* 반 친구가 제출할 때마다 이 함수가 다시 불립니다.
+     문항 화면을 매번 새로 그리면 내가 고르던 답이 지워지므로(“강제 스피드 게임”),
+     아직 제출 전이면 이미 그려진 문항 화면은 그대로 둡니다. 시간 제한은 없습니다. */
   function render() {
     const pre = store.get('preconceptions').pre;
-    if (pre) renderResult();
-    else renderForm();
+    if (pre) {
+      mode = 'result';
+      renderResult();
+    } else if (mode !== 'form') {
+      mode = 'form';
+      renderForm();
+    }
   }
 
   /* ── 문항 ─────────────────────────────────────────────── */

@@ -145,9 +145,16 @@ export default async function quiz(outlet) {
   const unsubPre = subscribeResponses(() => {});
   const unsubStore = store.subscribe('preconceptions', renderPost);
   let postBusy = false;
+  let postMode = null;
 
   function renderPost() {
     const { pre, post } = store.get('preconceptions');
+
+    /* 반 친구가 제출할 때마다 다시 불립니다. 내가 아직 제출 전이면
+       이미 그려진 문항을 다시 그리지 않아야 고르던 답이 지워지지 않습니다. */
+    const next = !pre ? 'none' : post ? 'done' : 'form';
+    if (next === 'form' && postMode === 'form') return;
+    postMode = next;
 
     if (!pre) {
       postBox.innerHTML = `
